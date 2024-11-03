@@ -9,12 +9,16 @@ import {
   getUser,
   getHistory,
   getAllHistoryOf,
-} from "./database.ts";
-import { Record, AuthRequestSchema } from "./types.ts";
+} from "./database.js";
+import { Record, AuthRequestSchema } from "./types.js";
 
 const app = express();
 
 app.use(express.json());
+
+app.get("/", (req, res) => {
+  res.send("hello");
+});
 
 app.post("/login", async (req, res) => {
   try {
@@ -74,6 +78,7 @@ app.get("/records/:id", async (req, res) => {
     }
     res.send(result);
   } catch (error) {
+    console.log(error);
     res.status(400).json({ error: "Invalid record ID requested" });
     return;
   }

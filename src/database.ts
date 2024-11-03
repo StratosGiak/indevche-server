@@ -1,6 +1,6 @@
 import "dotenv/config";
 import { createPool } from "mysql2/promise";
-import { AuthResponse, History, Record } from "./types.ts";
+import { AuthResponse, History, Record } from "./types.js";
 
 const pool = createPool({
   host: process.env.DB_HOST,
