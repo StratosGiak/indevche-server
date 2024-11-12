@@ -30,7 +30,7 @@ export async function createRecord(record: NewRecord) {
     `INSERT INTO episkeves
     (datek, onomatep, odos, perioxi, poli, tk,
     kinito, tilefono, email, eidos, marka, serialnr,
-    warranty, datekwarr, katastasi_p, mastoras_p, photo1, paratiriseis) VALUES
+    warranty, datekwarr, katastasi_p, mastoras_p, photo1, paratiriseis_para, paratiriseis_epi) VALUES
     (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       record.date,
@@ -50,7 +50,8 @@ export async function createRecord(record: NewRecord) {
       record.status,
       record.mechanic,
       record.photo,
-      record.notes,
+      record.notesReceived,
+      record.notesRepaired,
     ]
   );
   return result;
@@ -61,7 +62,7 @@ export async function editRecord(record: Record) {
     `UPDATE episkeves SET
     datek = ?, onomatep = ?, odos = ?, perioxi = ?, poli = ?, tk = ?,
     kinito = ?, tilefono = ?, email = ?, eidos = ?, marka = ?, serialnr = ?,
-    warranty = ?, datekwarr = ?, katastasi_p = ?, mastoras_p = ?, photo1 = ?, paratiriseis = ?
+    warranty = ?, datekwarr = ?, katastasi_p = ?, mastoras_p = ?, photo1 = ?, paratiriseis_para = ?, paratiriseis_epi = ?
     WHERE id = ?`,
     [
       record.date,
@@ -81,7 +82,8 @@ export async function editRecord(record: Record) {
       record.status,
       record.mechanic,
       record.photo,
-      record.notes,
+      record.notesReceived,
+      record.notesRepaired,
       record.id,
     ]
   );

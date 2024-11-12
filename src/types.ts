@@ -19,7 +19,8 @@ export interface NewRecord extends RowDataPacket {
   status: number;
   mechanic: number;
   photo?: string;
-  notes?: string;
+  notesReceived?: string;
+  notesRepaired?: string;
 }
 
 export interface Record extends NewRecord {
