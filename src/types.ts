@@ -19,6 +19,8 @@ export interface NewRecord extends RowDataPacket {
   status: number;
   mechanic: number;
   photo?: string;
+  advance?: string;
+  fee: string;
   notesReceived?: string;
   notesRepaired?: string;
 }
