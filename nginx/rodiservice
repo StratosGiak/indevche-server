@@ -1,0 +1,10 @@
+server {
+    server_name rodiservice.gr;
+
+    root /var/www/rodiservice;
+    index index.html;
+
+    location /api/ {
+        proxy_pass "http://node_app:3000/";
+    }
+}
