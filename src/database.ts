@@ -31,8 +31,8 @@ export async function createRecord(record: NewRecord) {
     (datek, onomatep, odos, perioxi, poli, tk,
     kinito, tilefono, email, eidos, marka, serialnr,
     warranty, datekwarr, pliromi, prokatavoli, katastasi_p, mastoras_p,
-    photo1, paratiriseis_para, paratiriseis_epi) VALUES
-    (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    photo, paratiriseis_para, paratiriseis_epi) VALUES
+    (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       record.date,
       record.name,
@@ -66,7 +66,7 @@ export async function editRecord(record: Record) {
     datek = ?, onomatep = ?, odos = ?, perioxi = ?, poli = ?, tk = ?,
     kinito = ?, tilefono = ?, email = ?, eidos = ?, marka = ?, serialnr = ?,
     warranty = ?, datekwarr = ?, pliromi = ?, prokatavoli = ?, katastasi_p = ?, mastoras_p = ?,
-    photo1 = ?, paratiriseis_para = ?, paratiriseis_epi = ?
+    photo = ?, paratiriseis_para = ?, paratiriseis_epi = ?
     WHERE id = ?`,
     [
       record.date,
