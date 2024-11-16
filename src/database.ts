@@ -1,6 +1,12 @@
 import "dotenv/config";
 import { createPool, ResultSetHeader } from "mysql2/promise";
-import { AuthResponse, History, NewRecord, Record } from "./types.js";
+import {
+  AuthResponse,
+  History,
+  NewHistory,
+  NewRecord,
+  Record,
+} from "./types.js";
 
 const pool = createPool({
   host: process.env.DB_HOST,
@@ -22,6 +28,8 @@ export async function getRecord(index: number) {
     "SELECT * FROM episkeves WHERE id = ?",
     [index]
   );
+  const record = result[0];
+  record.istorika = await getAllHistoryOf(record.id);
   return result[0];
 }
 
@@ -92,6 +100,16 @@ export async function editRecord(record: Record) {
       record.notesRepaired,
       record.id,
     ]
+  );
+  return result;
+}
+
+export async function addHistory(history: NewHistory) {
+  const [result, _] = await pool.execute<ResultSetHeader>(
+    `INSERT INTO istorika
+    (datek, paratiriseis, episkevi_id, mastoras_p) VALUES
+    (?, ?, ?, ?)`,
+    [history.date, history.notes, history.recordId, history.mechanic]
   );
   return result;
 }

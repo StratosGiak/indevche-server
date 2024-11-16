@@ -12,6 +12,7 @@ import {
   getAllHistoryOf,
   createRecord,
   editRecord,
+  addHistory,
 } from "./database.js";
 import { Record, AuthRequestSchema, NewRecord } from "./types.js";
 
@@ -37,6 +38,7 @@ app.post("/login", async (req, res) => {
       user: { id: id, name: onoma, username: user.username },
     });
   } catch (error) {
+    console.log(error);
     res.status(400).json({ error: "Bad request" });
   }
 });
@@ -53,6 +55,7 @@ app.post("/records/new", async (req, res) => {
     const record = await getRecord(result.insertId);
     res.status(200).json(record);
   } catch (error) {
+    console.log(error);
     res.status(500).json({ error: "Insert failed" });
   }
 });
@@ -63,6 +66,7 @@ app.get("/records/by/:id", async (req, res) => {
     const result = await getAllRecordsByMechanic(index);
     res.json(result);
   } catch (error) {
+    console.log(error);
     res.status(400).json({ error: "Invalid mechanic ID requested" });
   }
 });
@@ -70,10 +74,18 @@ app.get("/records/by/:id", async (req, res) => {
 app.put("/records/:id/edit", async (req, res) => {
   const newRecord = req.body as Record;
   try {
-    const result = await editRecord(newRecord);
+    await editRecord(newRecord);
+    for (const history of newRecord.newHistory) {
+      await addHistory({
+        ...history,
+        recordId: newRecord.id,
+        mechanic: newRecord.mechanic,
+      });
+    }
     const record = await getRecord(newRecord.id);
     res.status(200).send(record);
   } catch (error) {
+    console.log(error);
     res.status(500).json({ error: "Update failed" });
   }
 });

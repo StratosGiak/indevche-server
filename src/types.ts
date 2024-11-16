@@ -28,9 +28,17 @@ export interface NewRecord extends RowDataPacket {
 export interface Record extends NewRecord {
   id: number;
   history: History[];
+  newHistory: NewHistory[];
 }
 
-export interface History extends RowDataPacket {
+export interface NewHistory extends RowDataPacket {
+  recordId: number;
+  mechanic: number;
+  date: string;
+  notes: string;
+}
+
+export interface History extends NewHistory {
   id: number;
 }
 
