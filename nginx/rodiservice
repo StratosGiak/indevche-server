@@ -7,4 +7,12 @@ server {
     location /api/ {
         proxy_pass "http://node_app:3000/";
     }
+
+    location /media/post/ {
+        proxy_pass "http://node_app:3000/";
+    }
+
+    location /media/ {
+        alias /var/www/rodiservice/public/;
+    }
 }

@@ -19,7 +19,6 @@ import { Record, AuthRequestSchema, NewRecord } from "./types.js";
 const app = express();
 
 app.use(express.json());
-app.use(express.static("public"));
 
 app.post("/login", async (req, res) => {
   try {
@@ -140,11 +139,6 @@ app.get("/suggestions", async (req, res) => {
   res.json(result);
 });
 
-app.get("/media/:filename", (req, res) => {
-  res.sendFile(req.params.filename, {
-    root: "./public/images",
-  });
-});
 const uploadPhoto = multer({ dest: "./public/images" });
 app.post("/media", (req, res) => {
   uploadPhoto.single("file")(req, res, (err) => {
