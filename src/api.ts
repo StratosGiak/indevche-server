@@ -15,6 +15,7 @@ import {
   addHistory,
 } from "./database.js";
 import { Record, AuthRequestSchema, NewRecord } from "./types.js";
+import { rm } from "fs/promises";
 
 const app = express();
 
@@ -71,8 +72,9 @@ app.get("/records/by/:id", async (req, res) => {
 });
 
 app.put("/records/:id/edit", async (req, res) => {
-  const newRecord = req.body as Record;
   try {
+    const newRecord = req.body as Record;
+    const { photo: oldPhoto } = await getRecord(newRecord.id);
     await editRecord(newRecord);
     for (const history of newRecord.newHistory) {
       await addHistory({
@@ -83,6 +85,9 @@ app.put("/records/:id/edit", async (req, res) => {
     }
     const record = await getRecord(newRecord.id);
     res.status(200).send(record);
+    if (oldPhoto && oldPhoto != record.photo) {
+      rm(`./public/images/${oldPhoto}`);
+    }
   } catch (error) {
     console.log(error);
     res.status(500).json({ error: "Update failed" });
