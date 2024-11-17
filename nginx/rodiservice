@@ -3,6 +3,7 @@ server {
 
     root /var/www/rodiservice;
     index index.html;
+    client_max_body_size 3M;
 
     location /api/ {
         proxy_pass "http://node_app:3000/";

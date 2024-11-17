@@ -144,7 +144,10 @@ app.get("/suggestions", async (req, res) => {
   res.json(result);
 });
 
-const uploadPhoto = multer({ dest: "./public/images" });
+const uploadPhoto = multer({
+  dest: "./public/images",
+  limits: { fileSize: 2e6 },
+});
 app.post("/media", (req, res) => {
   uploadPhoto.single("file")(req, res, (err) => {
     if (err || !req.file) {
