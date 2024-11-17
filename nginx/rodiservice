@@ -8,8 +8,8 @@ server {
         proxy_pass "http://node_app:3000/";
     }
 
-    location /media/post/ {
-        proxy_pass "http://node_app:3000/";
+    location /media/upload {
+        proxy_pass "http://node_app:3000/media/";
     }
 
     location /media/ {
