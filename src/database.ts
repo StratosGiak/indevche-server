@@ -151,7 +151,7 @@ export async function getAllHistoryOf(index: number) {
 export async function getAllSuggestions() {
   return {
     //mechanics: await getAllMechanics(),
-    states: await getAllStates(),
+    statuses: await getAllStatuses(),
     products: await getAllProducts(),
     manufacturers: await getAllManufacturers(),
   };
@@ -162,7 +162,7 @@ export async function getAllMechanics() {
   return result;
 }
 
-export async function getAllStates() {
+export async function getAllStatuses() {
   const [result, _] = await pool.execute<Record[]>("SELECT * FROM katastaseis");
   return result;
 }
