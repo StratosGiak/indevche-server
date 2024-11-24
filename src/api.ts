@@ -44,6 +44,7 @@ app.use(
 );
 
 app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
 
 app.post("/login", async (req, res) => {
   try {
