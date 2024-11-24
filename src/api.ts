@@ -105,8 +105,8 @@ app.post("/records/new", restrict, async (req, res) => {
 
 app.get("/records/by/:id", restrict, async (req, res) => {
   try {
-    const index = z.coerce.number().int().min(1).parse(req.params.id);
-    if (req.session.user?.id != index) {
+    const index = z.coerce.number().int().min(0).parse(req.params.id);
+    if (req.session.user?.id != 0 && req.session.user?.id != index) {
       res.status(403).json({ error: "Not authorized" });
       return;
     }
@@ -127,7 +127,7 @@ app.put("/records/:id/edit", restrict, async (req, res) => {
       return;
     }
     const { photo: oldPhoto, mastoras_p: mechanic } = result;
-    if (req.session.user?.id != mechanic) {
+    if (req.session.user?.id != 0 && req.session.user?.id != mechanic) {
       res.status(403).json({ error: "Not authorized" });
       return;
     }
@@ -159,7 +159,10 @@ app.get("/records/:id", restrict, async (req, res) => {
       res.status(404).json({ error: "Record ID not found" });
       return;
     }
-    if (req.session.user!.id != result.mastoras_p) {
+    if (
+      req.session.user?.id != 0 &&
+      req.session.user!.id != result.mastoras_p
+    ) {
       res.status(403).json({ error: "Not authorized" });
       return;
     }
@@ -178,7 +181,10 @@ app.get("/history/:id", restrict, async (req, res) => {
       res.status(404).json({ error: "History ID not found" });
       return;
     }
-    if (req.session.user!.id != result.mastoras_p) {
+    if (
+      req.session.user?.id != 0 &&
+      req.session.user?.id != result.mastoras_p
+    ) {
       res.status(403).json({ error: "Not authorized" });
       return;
     }
@@ -191,8 +197,8 @@ app.get("/history/:id", restrict, async (req, res) => {
 
 app.get("/history/of/:id", restrict, async (req, res) => {
   try {
-    const index = z.coerce.number().int().min(1).parse(req.params.id);
-    if (req.session.user!.id != index) {
+    const index = z.coerce.number().int().min(0).parse(req.params.id);
+    if (req.session.user?.id != 0 && req.session.user?.id != index) {
       res.status(403).json({ error: "Not authorized" });
       return;
     }
@@ -208,7 +214,7 @@ app.get("/history/of/:id", restrict, async (req, res) => {
   }
 });
 
-app.get("/suggestions", async (req, res) => {
+app.get("/suggestions", restrict, async (req, res) => {
   const result = await getAllSuggestions();
   res.json(result);
 });
