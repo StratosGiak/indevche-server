@@ -39,7 +39,7 @@ app.use(
     store: redisStore,
     resave: false,
     saveUninitialized: false,
-    secret: "secret",
+    secret: process.env.SESSION_SECRET!,
   })
 );
 
