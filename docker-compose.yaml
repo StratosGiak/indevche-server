@@ -9,6 +9,14 @@ services:
       - 443:443
     depends_on:
       - node_app
+  redis_cache:
+    image: redis:latest
+    restart: always
+    ports:
+      - 6379:6379
+    command: redis-server --save 60 1
+    volumes:
+      - redis_data:/data
   node_app:
     image: stratosgiak/indevche-node
     init: true
@@ -17,13 +25,17 @@ services:
       - shared_volume:/usr/src/app/public
     environment:
       NODE_ENV: production
+      REDIS_HOST: redis_cache
     env_file:
       - .env
     ports:
       - 3000:3000
+    depends_on:
+      - redis_cache
     extra_hosts:
       - "host.docker.internal:host-gateway"
 
 volumes:
   shared_volume:
     external: true
+  redis_data:

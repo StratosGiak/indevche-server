@@ -1,6 +1,8 @@
 import "dotenv/config";
 import express from "express";
 import session from "express-session";
+import RedisStore from "connect-redis";
+import { createClient } from "redis";
 import multer from "multer";
 import { z } from "zod";
 import {
@@ -24,9 +26,17 @@ declare module "express-session" {
   }
 }
 
+const redisClient = createClient({ url: "redis://redis_cache" });
+redisClient.connect();
+const redisStore = new RedisStore({
+  client: redisClient,
+  prefix: "rodis",
+});
 const app = express();
+
 app.use(
   session({
+    store: redisStore,
     resave: false,
     saveUninitialized: false,
     secret: "secret",
