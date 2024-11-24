@@ -3,7 +3,7 @@ services:
     image: stratosgiak/indevche-nginx
     restart: always
     volumes:
-      - shared_volume:/var/www/rodiservice/public
+      - shared_volume:/var/www/rodiservice/public/images
     ports:
       - 80:80
       - 443:443
@@ -22,7 +22,7 @@ services:
     init: true
     restart: always
     volumes:
-      - shared_volume:/usr/src/app/public
+      - shared_volume:/usr/src/app/public/images
     environment:
       NODE_ENV: production
       REDIS_HOST: redis_cache
