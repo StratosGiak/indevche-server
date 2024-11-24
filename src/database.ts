@@ -73,7 +73,7 @@ export async function editRecord(record: Record) {
     `UPDATE episkeves SET
     datek = ?, onomatep = ?, odos = ?, perioxi = ?, poli = ?, tk = ?,
     kinito = ?, tilefono = ?, email = ?, eidos = ?, marka = ?, serialnr = ?,
-    warranty = ?, datekwarr = ?, pliromi = ?, prokatavoli = ?, katastasi_p = ?, mastoras_p = ?,
+    warranty = ?, datekwarr = ?, pliromi = ?, prokatavoli = ?, katastasi_p = ?,
     photo = ?, paratiriseis_para = ?, paratiriseis_epi = ?
     WHERE id = ?`,
     [
@@ -94,7 +94,6 @@ export async function editRecord(record: Record) {
       record.fee,
       record.advance,
       record.status,
-      record.mechanic,
       record.photo,
       record.notesReceived,
       record.notesRepaired,

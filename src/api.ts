@@ -121,21 +121,26 @@ app.get("/records/by/:id", restrict, async (req, res) => {
 app.put("/records/:id/edit", restrict, async (req, res) => {
   try {
     const index = z.coerce.number().int().min(1).parse(req.params.id);
-    if (req.session.user?.id != index) {
+    const result = await getRecord(index);
+    if (!result) {
+      res.status(404).json({ error: "Record ID not found" });
+      return;
+    }
+    const { photo: oldPhoto, mastoras_p: mechanic } = result;
+    if (req.session.user?.id != mechanic) {
       res.status(403).json({ error: "Not authorized" });
       return;
     }
-    const newRecord = req.body as Record;
-    const { photo: oldPhoto } = await getRecord(newRecord.id);
+    const newRecord = { ...req.body, id: index } as Record;
     await editRecord(newRecord);
     for (const history of newRecord.newHistory) {
       await addHistory({
         ...history,
-        recordId: newRecord.id,
-        mechanic: newRecord.mechanic,
+        recordId: index,
+        mechanic: mechanic,
       });
     }
-    const record = await getRecord(newRecord.id);
+    const record = await getRecord(index);
     res.status(200).send(record);
     if (oldPhoto && oldPhoto != record.photo) {
       rm(`./public/images/${oldPhoto}`);
