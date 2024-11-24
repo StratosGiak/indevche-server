@@ -1,5 +1,8 @@
 import "dotenv/config";
 import express from "express";
+import session from "express-session";
+import RedisStore from "connect-redis";
+import { createClient } from "redis";
 import multer from "multer";
 import { z } from "zod";
 import {
@@ -17,25 +20,47 @@ import {
 import { Record, AuthRequestSchema, NewRecord } from "./types.js";
 import { rm } from "fs/promises";
 
+declare module "express-session" {
+  export interface SessionData {
+    user: { id: number; name: string };
+  }
+}
+
+const redisClient = createClient({ url: "redis://redis_cache" });
+redisClient.connect();
+const redisStore = new RedisStore({
+  client: redisClient,
+  prefix: "rodis",
+});
 const app = express();
+
+app.use(
+  session({
+    store: redisStore,
+    resave: false,
+    saveUninitialized: false,
+    secret: "secret",
+  })
+);
 
 app.use(express.json());
 
 app.post("/login", async (req, res) => {
   try {
     const user = AuthRequestSchema.parse(req.body);
-    const { id, onoma, password } = await getUser(user.username);
-    if (!id) {
+    const result = await getUser(user.username);
+    if (!result) {
       res.status(404).json({ error: "Username not found" });
       return;
     }
+    const { id, onoma, password } = result;
     if (password !== user.password) {
       res.status(401).json({ error: "Wrong password" });
       return;
     }
-    res.json({
-      token: "abcde",
-      user: { id: id, name: onoma, username: user.username },
+    req.session.regenerate(function regenerate() {
+      req.session.user = { id: id, name: onoma };
+      res.json(req.session.user);
     });
   } catch (error) {
     console.log(error);
@@ -43,13 +68,30 @@ app.post("/login", async (req, res) => {
   }
 });
 
-app.get("/records/all", async (req, res) => {
+function restrict(
+  req: express.Request,
+  res: express.Response,
+  next: express.NextFunction
+) {
+  if (req.session.user) next();
+  else {
+    res.status(403).json({ error: "Authentication required" });
+  }
+}
+
+app.get("/records/all", restrict, async (req, res) => {
+  if (req.session.user?.id != 0) {
+    res.status(403).json({ error: "Not authorized" });
+  }
   const result = await getAllRecords();
   res.json(result);
 });
 
-app.post("/records/new", async (req, res) => {
-  const newRecord = req.body as NewRecord;
+app.post("/records/new", restrict, async (req, res) => {
+  const newRecord = {
+    ...req.body,
+    mechanic: req.session.user!.id,
+  } as NewRecord;
   try {
     const result = await createRecord(newRecord);
     const record = await getRecord(result.insertId);
@@ -60,9 +102,13 @@ app.post("/records/new", async (req, res) => {
   }
 });
 
-app.get("/records/by/:id", async (req, res) => {
+app.get("/records/by/:id", restrict, async (req, res) => {
   try {
     const index = z.coerce.number().int().min(1).parse(req.params.id);
+    if (req.session.user?.id != index) {
+      res.status(403).json({ error: "Not authorized" });
+      return;
+    }
     const result = await getAllRecordsByMechanic(index);
     res.json(result);
   } catch (error) {
@@ -71,8 +117,13 @@ app.get("/records/by/:id", async (req, res) => {
   }
 });
 
-app.put("/records/:id/edit", async (req, res) => {
+app.put("/records/:id/edit", restrict, async (req, res) => {
   try {
+    const index = z.coerce.number().int().min(1).parse(req.params.id);
+    if (req.session.user?.id != index) {
+      res.status(403).json({ error: "Not authorized" });
+      return;
+    }
     const newRecord = req.body as Record;
     const { photo: oldPhoto } = await getRecord(newRecord.id);
     await editRecord(newRecord);
@@ -94,12 +145,16 @@ app.put("/records/:id/edit", async (req, res) => {
   }
 });
 
-app.get("/records/:id", async (req, res) => {
+app.get("/records/:id", restrict, async (req, res) => {
   try {
     const index = z.coerce.number().int().min(1).parse(req.params.id);
     const result = await getRecord(index);
     if (!result) {
       res.status(404).json({ error: "Record ID not found" });
+      return;
+    }
+    if (req.session.user!.id != result.mastoras_p) {
+      res.status(403).json({ error: "Not authorized" });
       return;
     }
     res.send(result);
@@ -109,12 +164,16 @@ app.get("/records/:id", async (req, res) => {
   }
 });
 
-app.get("/history/:id", async (req, res) => {
+app.get("/history/:id", restrict, async (req, res) => {
   try {
     const index = z.coerce.number().int().min(1).parse(req.params.id);
     const result = await getHistory(index);
     if (!result) {
       res.status(404).json({ error: "History ID not found" });
+      return;
+    }
+    if (req.session.user!.id != result.mastoras_p) {
+      res.status(403).json({ error: "Not authorized" });
       return;
     }
     res.send(result);
@@ -124,9 +183,13 @@ app.get("/history/:id", async (req, res) => {
   }
 });
 
-app.get("/history/of/:id", async (req, res) => {
+app.get("/history/of/:id", restrict, async (req, res) => {
   try {
     const index = z.coerce.number().int().min(1).parse(req.params.id);
+    if (req.session.user!.id != index) {
+      res.status(403).json({ error: "Not authorized" });
+      return;
+    }
     const result = await getAllHistoryOf(index);
     if (!result) {
       res.status(404).json({ error: "Record ID not found" });
@@ -148,7 +211,7 @@ const uploadPhoto = multer({
   dest: "./public/images",
   limits: { fileSize: 2e6 },
 });
-app.post("/media", (req, res) => {
+app.post("/media", restrict, (req, res) => {
   uploadPhoto.single("file")(req, res, (err) => {
     if (err || !req.file) {
       console.log(err);
