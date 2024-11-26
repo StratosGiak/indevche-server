@@ -4,6 +4,7 @@ services:
     restart: always
     volumes:
       - shared_volume:/var/www/rodiservice/public/images
+      - flutter_volume:/var/www/rodiservice/
     ports:
       - 80:80
       - 443:443
@@ -37,5 +38,7 @@ services:
 
 volumes:
   shared_volume:
+    external: true
+  flutter_volume:
     external: true
   redis_data:
