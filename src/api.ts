@@ -143,7 +143,9 @@ app.put("/records/:id/edit", restrict, async (req, res) => {
     const record = await getRecord(index);
     res.status(200).send(record);
     if (oldPhoto && oldPhoto != record.photo) {
-      rm(`./public/images/${oldPhoto}`).catch((error) => console.log(error));
+      rm(`./public/images/${oldPhoto}`).catch((error) =>
+        console.log(`Previous image ${oldPhoto} not found`)
+      );
     }
   } catch (error) {
     console.log(error);
