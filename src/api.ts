@@ -16,7 +16,7 @@ import {
   createRecord,
   editRecord,
   addHistory,
-deleteRecord,
+  deleteRecord,
   getRecordPhoto,
 } from "./database.js";
 import { Record, AuthRequestSchema, NewRecord } from "./types.js";
@@ -121,7 +121,7 @@ app.get("/records/by/:id", restrict, async (req, res) => {
   }
 });
 
-app.put("/records/:id/edit", restrict, async (req, res) => {
+app.put("/records/:id", restrict, async (req, res) => {
   try {
     const index = z.coerce.number().int().min(1).parse(req.params.id);
     const result = await getRecord(index);
@@ -162,7 +162,7 @@ app.put("/records/:id/edit", restrict, async (req, res) => {
   }
 });
 
-app.delete("/records/:id/delete", restrict, async (req, res) => {
+app.delete("/records/:id", restrict, async (req, res) => {
   try {
     if (req.session.user?.id != 0) {
       res.status(403).send();
