@@ -1,5 +1,5 @@
 import "dotenv/config";
-import { createPool, ResultSetHeader } from "mysql2/promise";
+import { createPool, ResultSetHeader, RowDataPacket } from "mysql2/promise";
 import {
   AuthResponse,
   History,
@@ -104,6 +104,22 @@ export async function editRecord(record: Record) {
     ]
   );
   return result;
+}
+
+export async function deleteRecord(index: number) {
+  const [result, _] = await pool.execute<ResultSetHeader>(
+    "DELETE FROM episkeves WHERE id = ?",
+    [index]
+  );
+  return result;
+}
+
+export async function getRecordPhoto(index: number) {
+  const [result, _] = await pool.execute<RowDataPacket[]>(
+    "SELECT photo FROM episkeves WHERE id = ?",
+    [index]
+  );
+  return result[0];
 }
 
 export async function addHistory(history: NewHistory) {

@@ -16,6 +16,8 @@ import {
   createRecord,
   editRecord,
   addHistory,
+deleteRecord,
+  getRecordPhoto,
 } from "./database.js";
 import { Record, AuthRequestSchema, NewRecord } from "./types.js";
 import { rm } from "fs/promises";
@@ -157,6 +159,31 @@ app.put("/records/:id/edit", restrict, async (req, res) => {
   } catch (error) {
     console.log(error);
     res.status(500).json({ error: "Update failed" });
+  }
+});
+
+app.delete("/records/:id/delete", restrict, async (req, res) => {
+  try {
+    if (req.session.user?.id != 0) {
+      res.status(403).send();
+      return;
+    }
+    const index = z.coerce.number().int().min(1).parse(req.params.id);
+    const { photo } = await getRecordPhoto(index);
+    const result = await deleteRecord(index);
+    if (!result) {
+      res.status(404).json({ error: "Record ID not found" });
+      return;
+    }
+    res.send();
+    if (photo) {
+      rm(`./public/images/${photo}`).catch((error) =>
+        console.log(`Previous image ${photo} not found`)
+      );
+    }
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ error: "Delete failed" });
   }
 });
 
