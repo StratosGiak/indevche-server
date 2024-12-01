@@ -75,7 +75,7 @@ export async function editRecord(record: Record) {
     datek = ?, onomatep = ?, odos = ?, perioxi = ?, poli = ?, tk = ?,
     kinito = ?, tilefono = ?, email = ?, eidos = ?, marka = ?, serialnr = ?,
     warranty = ?, datekwarr = ?, pliromi = ?, prokatavoli = ?, katastasi_p = ?,
-    photo = ?, paratiriseis_para = ?, paratiriseis_epi = ?, katastima = ?
+    photo = ?, paratiriseis_para = ?, paratiriseis_epi = ?, katastima = ?, mastoras_p = ?
     WHERE id = ?`,
     [
       record.date,
@@ -99,6 +99,7 @@ export async function editRecord(record: Record) {
       record.notesReceived,
       record.notesRepaired,
       record.store,
+      record.mechanic,
       record.id,
     ]
   );

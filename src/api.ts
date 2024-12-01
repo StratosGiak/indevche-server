@@ -91,7 +91,8 @@ app.get("/records/all", restrict, async (req, res) => {
 app.post("/records/new", restrict, async (req, res) => {
   const newRecord = {
     ...req.body,
-    mechanic: req.session.user!.id,
+    mechanic:
+      req.session.user!.id == 0 ? req.body.mechanic : req.session.user!.id,
   } as NewRecord;
   try {
     const result = await createRecord(newRecord);
@@ -131,13 +132,19 @@ app.put("/records/:id/edit", restrict, async (req, res) => {
       res.status(403).json({ error: "Not authorized" });
       return;
     }
-    const newRecord = { ...req.body, id: index } as Record;
+    const newRecord = {
+      ...req.body,
+      mechanic:
+        req.session.user!.id == 0 ? req.body.mechanic : req.session.user!.id,
+      id: index,
+    } as Record;
     await editRecord(newRecord);
     for (const history of newRecord.newHistory) {
       await addHistory({
         ...history,
         recordId: index,
-        mechanic: mechanic,
+        mechanic:
+          req.session.user!.id == 0 ? req.body.mechanic : req.session.user!.id,
       });
     }
     const record = await getRecord(index);
