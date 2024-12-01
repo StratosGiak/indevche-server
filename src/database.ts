@@ -118,6 +118,9 @@ export async function addHistory(history: NewHistory) {
 
 export async function getAllRecords() {
   const [result, _] = await pool.execute<Record[]>("SELECT * FROM episkeves");
+  for (const record of result) {
+    record.istorika = await getAllHistoryOf(record.id);
+  }
   return result;
 }
 
