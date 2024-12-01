@@ -4,24 +4,24 @@ import { z } from "zod";
 export interface NewRecord extends RowDataPacket {
   date: string;
   name: string;
-  address: string;
-  area: string;
-  city: string;
-  postalCode: string;
+  address?: string;
+  area?: string;
+  city?: string;
+  postalCode?: string;
   phoneMobile: string;
   phoneHome?: string;
   email?: string;
   product: string;
-  manufacturer: string;
+  manufacturer?: string;
   serial?: string;
   hasWarranty: boolean;
   warrantyDate?: string;
   status: number;
   mechanic: number;
   photo?: string;
-  advance?: string;
+  advance: string;
   fee?: string;
-  notesReceived?: string;
+  notesReceived: string;
   notesRepaired?: string;
 }
 
