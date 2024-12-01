@@ -160,6 +160,7 @@ export async function getAllSuggestions() {
     products: await getAllProducts(),
     manufacturers: await getAllManufacturers(),
     stores: await getAllStores(),
+    damages: await getAllDamages(),
   };
 }
 
@@ -190,3 +191,7 @@ export async function getAllStores() {
   return result;
 }
 
+export async function getAllDamages() {
+  const [result, _] = await pool.execute("SELECT * FROM symptomata");
+  return result;
+}
