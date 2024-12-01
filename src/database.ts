@@ -151,7 +151,7 @@ export async function getAllHistoryOf(index: number) {
 
 export async function getAllSuggestions() {
   return {
-    //mechanics: await getAllMechanics(),
+    mechanics: await getAllMechanics(),
     statuses: await getAllStatuses(),
     products: await getAllProducts(),
     manufacturers: await getAllManufacturers(),
@@ -160,7 +160,9 @@ export async function getAllSuggestions() {
 }
 
 export async function getAllMechanics() {
-  const [result, _] = await pool.execute("SELECT * FROM mastores");
+  const [result, _] = await pool.execute(
+    "SELECT id, onoma FROM mastores WHERE id != 0"
+  );
   return result;
 }
 
