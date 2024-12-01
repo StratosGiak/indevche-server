@@ -160,27 +160,27 @@ export async function getAllSuggestions() {
 }
 
 export async function getAllMechanics() {
-  const [result, _] = await pool.execute<Record[]>("SELECT * FROM mastores");
+  const [result, _] = await pool.execute("SELECT * FROM mastores");
   return result;
 }
 
 export async function getAllStatuses() {
-  const [result, _] = await pool.execute<Record[]>("SELECT * FROM katastaseis");
+  const [result, _] = await pool.execute("SELECT * FROM katastaseis");
   return result;
 }
 
 export async function getAllProducts() {
-  const [result, _] = await pool.execute<Record[]>("SELECT * FROM eidi");
+  const [result, _] = await pool.execute("SELECT * FROM eidi");
   return result;
 }
 
 export async function getAllManufacturers() {
-  const [result, _] = await pool.execute<Record[]>("SELECT * FROM markes");
+  const [result, _] = await pool.execute("SELECT * FROM markes");
   return result;
 }
 
 export async function getAllStores() {
-  const [result, _] = await pool.execute<Record[]>("SELECT * FROM katastimata");
+  const [result, _] = await pool.execute("SELECT * FROM katastimata");
   return result;
 }
 
