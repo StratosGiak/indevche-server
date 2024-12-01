@@ -96,7 +96,7 @@ app.post("/records/new", restrict, async (req, res) => {
   try {
     const result = await createRecord(newRecord);
     const record = await getRecord(result.insertId);
-    res.status(200).json(record);
+    res.json(record);
   } catch (error) {
     console.log(error);
     res.status(500).json({ error: "Insert failed" });
@@ -141,7 +141,7 @@ app.put("/records/:id/edit", restrict, async (req, res) => {
       });
     }
     const record = await getRecord(index);
-    res.status(200).send(record);
+    res.send(record);
     if (oldPhoto && oldPhoto != record.photo) {
       rm(`./public/images/${oldPhoto}`).catch((error) =>
         console.log(`Previous image ${oldPhoto} not found`)
