@@ -23,6 +23,7 @@ export interface NewRecord extends RowDataPacket {
   fee?: string;
   notesReceived: string;
   notesRepaired?: string;
+  store: number;
 }
 
 export interface Record extends NewRecord {

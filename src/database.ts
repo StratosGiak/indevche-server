@@ -39,8 +39,8 @@ export async function createRecord(record: NewRecord) {
     (datek, onomatep, odos, perioxi, poli, tk,
     kinito, tilefono, email, eidos, marka, serialnr,
     warranty, datekwarr, pliromi, prokatavoli, katastasi_p, mastoras_p,
-    photo, paratiriseis_para, paratiriseis_epi) VALUES
-    (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    photo, paratiriseis_para, paratiriseis_epi, katastima) VALUES
+    (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       record.date,
       record.name,
@@ -63,6 +63,7 @@ export async function createRecord(record: NewRecord) {
       record.photo,
       record.notesReceived,
       record.notesRepaired,
+      record.store,
     ]
   );
   return result;
@@ -74,7 +75,7 @@ export async function editRecord(record: Record) {
     datek = ?, onomatep = ?, odos = ?, perioxi = ?, poli = ?, tk = ?,
     kinito = ?, tilefono = ?, email = ?, eidos = ?, marka = ?, serialnr = ?,
     warranty = ?, datekwarr = ?, pliromi = ?, prokatavoli = ?, katastasi_p = ?,
-    photo = ?, paratiriseis_para = ?, paratiriseis_epi = ?
+    photo = ?, paratiriseis_para = ?, paratiriseis_epi = ?, katastima = ?
     WHERE id = ?`,
     [
       record.date,
@@ -97,6 +98,7 @@ export async function editRecord(record: Record) {
       record.photo,
       record.notesReceived,
       record.notesRepaired,
+      record.store,
       record.id,
     ]
   );
@@ -153,6 +155,7 @@ export async function getAllSuggestions() {
     statuses: await getAllStatuses(),
     products: await getAllProducts(),
     manufacturers: await getAllManufacturers(),
+    stores: await getAllStores(),
   };
 }
 
@@ -175,3 +178,9 @@ export async function getAllManufacturers() {
   const [result, _] = await pool.execute<Record[]>("SELECT * FROM markes");
   return result;
 }
+
+export async function getAllStores() {
+  const [result, _] = await pool.execute<Record[]>("SELECT * FROM katastimata");
+  return result;
+}
+
