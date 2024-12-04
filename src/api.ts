@@ -19,7 +19,12 @@ import {
   deleteRecord,
   getRecordPhoto,
 } from "./database.js";
-import { Record, AuthRequestSchema, NewRecord } from "./types.js";
+import {
+  Record,
+  AuthRequestSchema,
+  NewRecord,
+  DatabaseRecord,
+} from "./types.js";
 import { rm } from "fs/promises";
 
 declare module "express-session" {
@@ -47,6 +52,33 @@ app.use(
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+function convertRecord(record: DatabaseRecord) {
+  return {
+    id: record.id,
+    date: record.datek,
+    name: record.onomatep,
+    address: record.odos,
+    area: record.perioxi,
+    city: record.poli,
+    postalCode: record.tk,
+    phoneMobile: record.kinito,
+    phoneHome: record.tilefono,
+    email: record.email,
+    product: record.eidos,
+    manufacturer: record.marka,
+    serial: record.serialnr,
+    hasWarranty: record.warranty,
+    warrantyDate: record.datekwarr,
+    fee: record.pliromi,
+    advance: record.prokatavoli,
+    status: record.katastasi_p,
+    mechanic: record.mastoras_p,
+    photo: record.photo,
+    notesReceived: record.paratiriseis_para,
+    notesRepaired: record.paratiriseis_epi,
+    store: record.katastima,
+  } as Record;
+}
 
 app.post("/login", async (req, res) => {
   try {

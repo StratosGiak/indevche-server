@@ -2,6 +2,7 @@ import "dotenv/config";
 import { createPool, ResultSetHeader, RowDataPacket } from "mysql2/promise";
 import {
   AuthResponse,
+  DatabaseRecord,
   History,
   NewHistory,
   NewRecord,
@@ -24,7 +25,7 @@ export async function getUser(username: string) {
 }
 
 export async function getRecord(index: number) {
-  const [result, _] = await pool.execute<Record[]>(
+  const [result, _] = await pool.execute<DatabaseRecord[]>(
     "SELECT * FROM episkeves WHERE id = ?",
     [index]
   );
@@ -133,7 +134,9 @@ export async function addHistory(history: NewHistory) {
 }
 
 export async function getAllRecords() {
-  const [result, _] = await pool.execute<Record[]>("SELECT * FROM episkeves");
+  const [result, _] = await pool.execute<DatabaseRecord[]>(
+    "SELECT * FROM episkeves"
+  );
   for (const record of result) {
     record.istorika = await getAllHistoryOf(record.id);
   }
@@ -141,7 +144,7 @@ export async function getAllRecords() {
 }
 
 export async function getAllRecordsByMechanic(id: number) {
-  const [result, _] = await pool.execute<Record[]>(
+  const [result, _] = await pool.execute<DatabaseRecord[]>(
     "SELECT * FROM episkeves WHERE mastoras_p = ?",
     [id]
   );

@@ -1,6 +1,32 @@
 import { RowDataPacket } from "mysql2";
 import { z } from "zod";
 
+export interface DatabaseRecord extends RowDataPacket {
+  id: number;
+  datek: string;
+  onomatep: string;
+  odos?: string;
+  perioxi?: string;
+  poli?: string;
+  tk?: string;
+  kinito: string;
+  tilefono?: string;
+  email?: string;
+  eidos: string;
+  marka?: string;
+  serialnr?: string;
+  warranty: boolean;
+  datekwarr?: string;
+  pliromi?: string;
+  prokatavoli: string;
+  katastasi_p: number;
+  mastoras_p: number;
+  photo?: string;
+  paratiriseis_para: string;
+  paratiriseis_epi?: string;
+  katastima: number;
+}
+
 export interface NewRecord extends RowDataPacket {
   date: string;
   name: string;
