@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xfdf xmlns="http://ns.adobe.com/xfdf/" xml:space="preserve">
+   <fields>
+      <field name="name">
+		   <value></value>
+      </field>
+      <field name="address">
+		   <value></value>
+      </field>
+      <field name="city">
+		   <value></value>
+      </field>
+      <field name="phone">
+		   <value></value>
+      </field>
+      <field name="id">
+		   <value></value>
+      </field>
+      <field name="product">
+		   <value></value>
+      </field>
+      <field name="manufacturer">
+		   <value></value>
+      </field>
+      <field name="advance">
+		   <value></value>
+      </field>
+	    <field name="date">
+		   <value></value>
+      </field>
+	   <field name="notesReceived">
+		   <value></value>
+      </field>
+   </fields>
+</xfdf>

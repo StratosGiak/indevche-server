@@ -69,6 +69,27 @@ export interface History extends NewHistory {
   id: number;
 }
 
+export interface FormTemplate {
+  xfdf: {
+    fields: {
+      field: { value: string; "@_name": keyof FormData }[];
+    };
+  };
+}
+
+export interface FormData {
+  id: string;
+  date: string;
+  name: string;
+  address?: string;
+  city?: string;
+  phone: string;
+  product: string;
+  manufacturer?: string;
+  advance: string;
+  notesReceived: string;
+}
+
 export interface AuthResponse extends RowDataPacket {
   id: number;
   name: string;
