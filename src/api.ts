@@ -131,6 +131,10 @@ app.post("/records/new", restrict, async (req, res) => {
   try {
     const result = await createRecord(newRecord);
     const record = await getRecord(result.insertId);
+    if (!record) {
+      res.status(500).json({ error: "Insert failed" });
+      return;
+    }
     res.json(record);
   } catch (error) {
     console.log(error);
@@ -182,6 +186,10 @@ app.put("/records/:id", restrict, async (req, res) => {
       });
     }
     const record = await getRecord(index);
+    if (!record) {
+      res.status(500).json({ error: "Update failed" });
+      return;
+    }
     res.send(record);
     if (oldPhoto && oldPhoto != record.photo) {
       rm(`./public/images/${oldPhoto}`).catch((error) =>

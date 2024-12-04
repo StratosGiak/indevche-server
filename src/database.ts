@@ -29,6 +29,7 @@ export async function getRecord(index: number) {
     "SELECT * FROM episkeves WHERE id = ?",
     [index]
   );
+  if (!result[0]) return;
   const record = result[0];
   record.istorika = await getAllHistoryOf(record.id);
   return result[0];
