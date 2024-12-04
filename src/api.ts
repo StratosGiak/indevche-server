@@ -26,6 +26,7 @@ import {
   DatabaseRecord,
 } from "./types.js";
 import { rm } from "fs/promises";
+import { createPDFForm } from "./pdf.js";
 
 declare module "express-session" {
   export interface SessionData {
@@ -52,6 +53,8 @@ app.use(
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+app.use(express.static(`${import.meta.dirname}/../forms/filled`));
+
 function convertRecord(record: DatabaseRecord) {
   return {
     id: record.id,
@@ -225,6 +228,38 @@ app.delete("/records/:id", restrict, async (req, res) => {
     console.log(error);
     res.status(500).json({ error: "Delete failed" });
   }
+});
+
+app.get("/records/:id/form", async (req, res) => {
+  const index = z.coerce.number().int().min(1).parse(req.params.id);
+  const result = await getRecord(index);
+  if (!result) {
+    res.status(404).json({ error: "Record ID not found" });
+    return;
+  }
+  const record = convertRecord(result);
+  // if (req.session.user?.id != 0 && req.session.user?.id != record.mechanic) {
+  //   res.status(403).send();
+  //   return;
+  // }
+  const filename = await createPDFForm({
+    ...record,
+    id: req.params.id,
+    phone: record.phoneMobile,
+    date: new Date(record.date).toLocaleDateString("en-GB"),
+    advance: "€ " + record.advance,
+  });
+  if (!filename) {
+    res.status(500).send();
+    return;
+  }
+  const date = new Date();
+  res.download(
+    `${import.meta.dirname}/../forms/filled/${filename}`,
+    `deltio_${
+      req.params.id
+    }_${date.getFullYear()}_${date.getMonth()}_${date.getDate()}`
+  );
 });
 
 app.get("/records/:id", restrict, async (req, res) => {
