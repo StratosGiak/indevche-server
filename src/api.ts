@@ -257,9 +257,9 @@ app.get("/records/:id/form", async (req, res) => {
   const date = new Date();
   res.download(
     `${formDir}/${filename}`,
-    `deltio_${
-      req.params.id
-    }_${date.getFullYear()}_${date.getMonth()}_${date.getDate()}`
+    `deltio_${req.params.id}_${date.getFullYear()}_${
+      date.getMonth() + 1
+    }_${date.getDate()}`
   );
 });
 
