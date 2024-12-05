@@ -1,0 +1,19 @@
+:80 {
+    root * /var/www/rodiservice
+	request_body {
+		max_size 3MB
+	}
+
+    file_server
+    handle_path /api/* {
+        reverse_proxy node_app:3000
+    }
+
+    handle_path /media/* {
+        root * /var/www/rodiservice/public
+    }
+
+    log {
+        output stdout
+    }
+}
