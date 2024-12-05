@@ -1,13 +1,14 @@
 services:
   server:
-    image: stratosgiak/indevche-nginx
-    restart: always
-    volumes:
-      - shared_volume:/var/www/rodiservice/public/images
-      - flutter_volume:/var/www/rodiservice/
+    image: stratosgiak/indevche-server
     ports:
       - 80:80
       - 443:443
+    volumes:
+      - shared_volume:/var/www/rodiservice/public/images
+      - flutter_volume:/var/www/rodiservice/
+      - caddy_data:/data
+      - caddy_config:/config
     depends_on:
       - node_app
   redis_cache:
@@ -42,3 +43,5 @@ volumes:
   flutter_volume:
     external: true
   redis_data:
+  caddy_data:
+  caddy_config:
