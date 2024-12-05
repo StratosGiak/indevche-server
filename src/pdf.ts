@@ -2,10 +2,15 @@ import { exec } from "child_process";
 import { promisify } from "util";
 import { FormTemplate, FormData } from "./types.js";
 import { XMLBuilder, XMLParser } from "fast-xml-parser";
-import { readFile, rm, writeFile } from "fs/promises";
+import { mkdir, readFile, rm, writeFile } from "fs/promises";
 import { randomUUID } from "crypto";
 import { setTimeout } from "timers/promises";
+import { existsSync } from "fs";
 const formDir = import.meta.dirname + "/../forms";
+
+if (!existsSync(`${formDir}/filled`)) {
+  await mkdir(`${formDir}/filled`);
+}
 
 const cmd = promisify(exec);
 const parser = new XMLParser({ ignoreAttributes: false });
