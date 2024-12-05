@@ -27,6 +27,7 @@ import {
 } from "./types.js";
 import { rm } from "fs/promises";
 import { createPDFForm } from "./pdf.js";
+const formDir = `${import.meta.dirname}/../forms/filled`;
 
 declare module "express-session" {
   export interface SessionData {
@@ -53,7 +54,7 @@ app.use(
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
-app.use(express.static(`${import.meta.dirname}/../forms/filled`));
+app.use(express.static(formDir));
 
 function convertRecord(record: DatabaseRecord) {
   return {
@@ -255,7 +256,7 @@ app.get("/records/:id/form", async (req, res) => {
   }
   const date = new Date();
   res.download(
-    `${import.meta.dirname}/../forms/filled/${filename}`,
+    `${formDir}/${filename}`,
     `deltio_${
       req.params.id
     }_${date.getFullYear()}_${date.getMonth()}_${date.getDate()}`
