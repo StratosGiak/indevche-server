@@ -13,6 +13,10 @@
         root * /var/www/rodiservice/public
     }
 
+    handle_path /form/* {
+        root * /var/www/rodiservice/forms/filled
+    }
+
     log {
         output stdout
     }

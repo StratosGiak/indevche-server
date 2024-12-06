@@ -9,6 +9,7 @@ services:
       - flutter_volume:/var/www/rodiservice/
       - caddy_data:/data
       - caddy_config:/config
+      - ./forms:/var/www/rodiservice/forms:ro
     depends_on:
       - node_app
   redis_cache:
@@ -25,6 +26,7 @@ services:
     restart: always
     volumes:
       - shared_volume:/usr/src/app/public/images
+      - ./forms:/usr/src/app/forms
     environment:
       NODE_ENV: production
       REDIS_HOST: redis_cache
