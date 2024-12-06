@@ -3,7 +3,7 @@ import { promisify } from "util";
 import { FormTemplate, FormData } from "./types.js";
 import { XMLBuilder, XMLParser } from "fast-xml-parser";
 import { mkdir, readFile, rm, writeFile } from "fs/promises";
-import { randomUUID } from "crypto";
+import { randomBytes } from "crypto";
 import { setTimeout } from "timers/promises";
 import { existsSync } from "fs";
 const formDir = import.meta.dirname + "/../forms";
@@ -18,13 +18,19 @@ const builder = new XMLBuilder({ ignoreAttributes: false });
 const XMLFile = await readFile(`${formDir}/form.xfdf`);
 const xml = parser.parse(XMLFile) as FormTemplate;
 
+const generateFilename = promisify(randomBytes);
+
 async function createXMLForm(data: FormData): Promise<string | null> {
   const template = structuredClone(xml);
   for (const field of template.xfdf.fields.field) {
     field.value = data[field["@_name"]] ?? "";
   }
   const newXml = builder.build(template) as string;
-  const filename = randomUUID();
+  const date = new Date();
+  const buffer = await generateFilename(4);
+  const filename = `deltio_${data.id}_${date.getFullYear()}_${
+    date.getMonth() + 1
+  }_${date.getDate()}_${buffer.toString("hex")}`;
   try {
     await writeFile(`${formDir}/filled/${filename}`, newXml);
     return filename;
