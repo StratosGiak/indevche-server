@@ -3,4 +3,5 @@
 node_modules
 dist
 public/images
+forms/filled
 docker-compose.override.yaml
