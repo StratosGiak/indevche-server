@@ -18,20 +18,38 @@ import {
   addHistory,
   deleteRecord,
   getRecordPhoto,
+  getStore,
+  getRecordDataForSms,
 } from "./database.js";
 import {
   Record,
   AuthRequestSchema,
   NewRecord,
   DatabaseRecord,
+  SmsType,
 } from "./types.js";
 import { rm } from "fs/promises";
 import { createPDFForm } from "./pdf.js";
+import { randomUUID } from "crypto";
 const formDir = `${import.meta.dirname}/../forms/filled`;
 
 declare module "express-session" {
   export interface SessionData {
     user: { id: number; name: string };
+  }
+}
+
+async function generateSmsText(type: SmsType, store?: number) {
+  switch (type) {
+    case SmsType.Repaired:
+      if (!store) return null;
+      const { onoma: area, odos: address } = await getStore(store);
+      if (!area) return null;
+      return `Η ΣΥΣΚΕΥΗ ΣΑΣ ΕΙΝΑΙ ΕΤΟΙΜΗ ΓΙΑ ΠΑΡΑΛΑΒΗ ΑΠΟ ΤΟ ΚΑΤΑΣΤΗΜΑ ΜΑΣ ${address}, ${area}.\nΑΞΙΟΛΟΓΗΣΤΕ ΜΑΣ ΘΕΤΙΚΑ ΕΔΩ : https://g.page/r/CcwC4xOwTPfIEB0/review`;
+    case SmsType.Unrepairable:
+      return `ΣΑΣ ΕΝΗΜΕΡΩΝΟΥΜΕ ΟΤΙ Η ΣΥΣΚΕΥΗ ΣΑΣ ΕΧΕΙ ΚΡΙΘΕΙ ΑΝΕΠΙΣΚΕΥΑΣΤΗ.\nΠΑΡΑΚΑΛΩ ΓΙΑ ΤΗΝ ΑΜΕΣΗ ΠΑΡΑΛΑΒΗ ΤΗΣ, ΔΙΟΤΙ ΘΑ ΠΡΟΩΘΗΘΕΙ ΣΤΗΝ ΑΝΑΚΥΚΛΩΣΗ ΣΤΟ ΤΕΛΟΣ ΤΗΣ ΕΒΔΟΜΑΔΑΣ`;
+    case SmsType.Thanks:
+      return "ΕΥΧΑΡΙΣΤΟΥΜΕ ΓΙΑ ΤΗΝ ΠΡΟΤΙΜΗΣΗ ΣΑΣ. ΕΙΜΑΣΤΕ ΠΑΝΤΑ ΣΤΗ ΔΙΑΘΕΣΗ ΣΑΣ";
   }
 }
 
@@ -261,6 +279,69 @@ app.get("/records/:id/form", async (req, res) => {
       date.getMonth() + 1
     }_${date.getDate()}`
   );
+});
+
+app.post("/records/:id/sms/:type", restrict, async (req, res) => {
+  try {
+    const index = z.coerce.number().int().min(1).parse(req.params.id);
+    const type = ((type: string) => {
+      switch (true) {
+        case type === "repaired":
+          return SmsType.Repaired;
+        case type === "unrepairable":
+          return SmsType.Unrepairable;
+        case type === "thanks":
+          return SmsType.Thanks;
+        default:
+          return null;
+      }
+    })(req.params.type);
+    if (type === null) {
+      res.status(400).json({ error: "Invalid SMS type" });
+      return;
+    }
+    const { katastima: store, kinito: phone } = await getRecordDataForSms(
+      index
+    );
+    const text = await generateSmsText(type, store);
+    if (!phone || !text) {
+      res.status(400).json({ error: "Cannot send SMS" });
+      return;
+    }
+    const msgId = randomUUID();
+    const response = await fetch(
+      "https://easysms.gr/api/sms/send?" +
+        new URLSearchParams({
+          key: process.env.SMS_API_KEY!,
+          text: text,
+          from: "RodiService",
+          to: phone,
+          callback:
+            `http://188.245.190.233/api/sms_callback?` +
+            new URLSearchParams({ id: msgId }),
+        }).toString(),
+      { method: "POST" }
+    );
+    if (!response) {
+      res.status(500).send();
+      return;
+    }
+    pending[msgId] = res;
+  } catch (error) {
+    console.log(error);
+    res.status(400).json({ error: "Error while sending SMS" });
+    return;
+  }
+});
+const pending: { [id: string]: express.Response } = {};
+
+app.get("/sms_callback", (req, res) => {
+  res.send();
+  const msgId = req.query.id as string;
+  const status = req.query.status as string;
+  if (status !== "d") pending[msgId].status(500);
+  pending[msgId].send();
+  delete pending[msgId];
 });
 
 app.get("/records/:id", restrict, async (req, res) => {

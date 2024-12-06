@@ -27,6 +27,11 @@ export interface DatabaseRecord extends RowDataPacket {
   katastima: number;
 }
 
+export interface DatabaseStore extends RowDataPacket {
+  onoma: string;
+  odos: string;
+}
+
 export interface NewRecord extends RowDataPacket {
   date: string;
   name: string;
@@ -67,6 +72,12 @@ export interface NewHistory extends RowDataPacket {
 
 export interface History extends NewHistory {
   id: number;
+}
+
+export enum SmsType {
+  Repaired,
+  Unrepairable,
+  Thanks,
 }
 
 export interface FormTemplate {

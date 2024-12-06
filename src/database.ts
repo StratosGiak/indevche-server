@@ -3,6 +3,7 @@ import { createPool, ResultSetHeader, RowDataPacket } from "mysql2/promise";
 import {
   AuthResponse,
   DatabaseRecord,
+  DatabaseStore,
   History,
   NewHistory,
   NewRecord,
@@ -214,4 +215,20 @@ export async function getAllStores() {
 export async function getAllDamages() {
   const [result, _] = await pool.execute("SELECT * FROM symptomata");
   return result;
+}
+
+export async function getStore(id: number) {
+  const [result, _] = await pool.execute<DatabaseStore[]>(
+    "SELECT onoma, odos FROM katastimata WHERE id = ?",
+    [id]
+  );
+  return result[0];
+}
+
+export async function getRecordDataForSms(id: number) {
+  const [result, _] = await pool.execute<DatabaseRecord[]>(
+    "SELECT katastima, mastoras_p, onomatep, kinito FROM episkeves WHERE id = ?",
+    [id]
+  );
+  return result[0];
 }
