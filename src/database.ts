@@ -1,14 +1,72 @@
 import "dotenv/config";
 import { createPool, ResultSetHeader, RowDataPacket } from "mysql2/promise";
 import {
-  AuthResponse,
+  DatabaseHistory,
   DatabaseRecord,
   DatabaseStore,
+  DatabaseUser,
   History,
   NewHistory,
   NewRecord,
   Record,
+  Store,
+  User,
 } from "./types.js";
+
+function convertRecord(record: DatabaseRecord) {
+  return {
+    id: record.id,
+    date: record.datek,
+    name: record.onomatep,
+    address: record.odos,
+    area: record.perioxi,
+    city: record.poli,
+    postalCode: record.tk,
+    phoneMobile: record.kinito,
+    phoneHome: record.tilefono,
+    email: record.email,
+    product: record.eidos,
+    manufacturer: record.marka,
+    serial: record.serialnr,
+    hasWarranty: record.warranty,
+    warrantyDate: record.datekwarr,
+    fee: record.pliromi,
+    advance: record.prokatavoli,
+    status: record.katastasi_p,
+    mechanic: record.mastoras_p,
+    photo: record.photo,
+    notesReceived: record.paratiriseis_para,
+    notesRepaired: record.paratiriseis_epi,
+    store: record.katastima,
+    history: record.istoriko.map((h) => convertHistory(h)),
+  } as Record;
+}
+
+function convertUser(user: DatabaseUser) {
+  return {
+    id: user.id,
+    name: user.onoma,
+    username: user.username,
+    password: user.password,
+  } as User;
+}
+
+function convertHistory(history: DatabaseHistory) {
+  return {
+    id: history.id,
+    recordId: history.episkevi_id,
+    mechanic: history.mastoras_p,
+    date: history.datek,
+    notes: history.paratiriseis,
+  } as History;
+}
+
+function convertStore(store: DatabaseStore) {
+  return {
+    area: store.onoma,
+    address: store.odos,
+  } as Store;
+}
 
 const pool = createPool({
   host: process.env.DB_HOST,
@@ -18,11 +76,12 @@ const pool = createPool({
 });
 
 export async function getUser(username: string) {
-  const [result, _] = await pool.execute<AuthResponse[]>(
-    "SELECT id, onoma, password FROM mastores WHERE username = ?",
+  const [result, _] = await pool.execute<DatabaseUser[]>(
+    "SELECT * FROM mastores WHERE username = ?",
     [username]
   );
-  return result[0];
+  if (!result[0]) return null;
+  return convertUser(result[0]);
 }
 
 export async function getRecord(index: number) {
@@ -31,9 +90,8 @@ export async function getRecord(index: number) {
     [index]
   );
   if (!result[0]) return;
-  const record = result[0];
-  record.istorika = await getAllHistoryOf(record.id);
-  return result[0];
+  result[0].istoriko = await getAllHistoryOfUnconverted(result[0].id);
+  return convertRecord(result[0]);
 }
 
 export async function createRecord(record: NewRecord) {
@@ -122,7 +180,7 @@ export async function getRecordPhoto(index: number) {
     "SELECT photo FROM episkeves WHERE id = ?",
     [index]
   );
-  return result[0];
+  return result[0] as unknown as string | undefined;
 }
 
 export async function addHistory(history: NewHistory) {
@@ -140,9 +198,9 @@ export async function getAllRecords() {
     "SELECT * FROM episkeves"
   );
   for (const record of result) {
-    record.istorika = await getAllHistoryOf(record.id);
+    record.istoriko = await getAllHistoryOfUnconverted(record.id);
   }
-  return result;
+  return result.map((r) => convertRecord(r));
 }
 
 export async function getAllRecordsByMechanic(id: number) {
@@ -151,27 +209,33 @@ export async function getAllRecordsByMechanic(id: number) {
     [id]
   );
   for (const record of result) {
-    record.istorika = await getAllHistoryOf(record.id);
+    record.istoriko = await getAllHistoryOfUnconverted(record.id);
   }
-  return result;
+  return result.map((r) => convertRecord(r));
 }
 
 export async function getHistory(index: number) {
-  const [result, _] = await pool.execute<History[]>(
+  const [result, _] = await pool.execute<DatabaseHistory[]>(
     "SELECT * FROM istorika WHERE id = ?",
     [index]
   );
-  return result[0];
+  if (!result[0]) return null;
+  return convertHistory(result[0]);
 }
 
-export async function getAllHistoryOf(index: number) {
-  const [result, _] = await pool.execute<History[]>(
+export async function getAllHistoryOfUnconverted(index: number) {
+  const [result, _] = await pool.execute<DatabaseHistory[]>(
     `SELECT ir.* FROM istorika_read ir
     JOIN istorika i ON ir.id = i.id
     WHERE i.episkevi_id = ?`,
     [index]
   );
   return result;
+}
+
+export async function getAllHistoryOf(index: number) {
+  const result = await getAllHistoryOfUnconverted(index);
+  return result.map((h) => convertHistory(h));
 }
 
 export async function getAllSuggestions() {
@@ -222,7 +286,7 @@ export async function getStore(id: number) {
     "SELECT onoma, odos FROM katastimata WHERE id = ?",
     [id]
   );
-  return result[0];
+  return convertStore(result[0]);
 }
 
 export async function getRecordDataForSms(id: number) {
@@ -230,5 +294,5 @@ export async function getRecordDataForSms(id: number) {
     "SELECT katastima, mastoras_p, onomatep, kinito FROM episkeves WHERE id = ?",
     [id]
   );
-  return result[0];
+  return convertRecord(result[0]);
 }

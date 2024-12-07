@@ -25,6 +25,22 @@ export interface DatabaseRecord extends RowDataPacket {
   paratiriseis_para: string;
   paratiriseis_epi?: string;
   katastima: number;
+  istoriko: DatabaseHistory[];
+}
+
+export interface DatabaseHistory extends RowDataPacket {
+  id: number;
+  episkevi_id: number;
+  mastoras_p: number;
+  datek: string;
+  paratiriseis: string;
+}
+
+export interface DatabaseUser extends RowDataPacket {
+  id: number;
+  onoma: string;
+  password: string;
+  username: string;
 }
 
 export interface DatabaseStore extends RowDataPacket {
@@ -32,7 +48,7 @@ export interface DatabaseStore extends RowDataPacket {
   odos: string;
 }
 
-export interface NewRecord extends RowDataPacket {
+export interface NewRecord {
   date: string;
   name: string;
   address?: string;
@@ -63,7 +79,7 @@ export interface Record extends NewRecord {
   newHistory: NewHistory[];
 }
 
-export interface NewHistory extends RowDataPacket {
+export interface NewHistory {
   recordId: number;
   mechanic: number;
   date: string;
@@ -72,6 +88,18 @@ export interface NewHistory extends RowDataPacket {
 
 export interface History extends NewHistory {
   id: number;
+}
+
+export interface User {
+  id: number;
+  name: string;
+  password: string;
+  username: string;
+}
+
+export interface Store {
+  area: string;
+  address: string;
 }
 
 export enum SmsType {
@@ -99,12 +127,6 @@ export interface FormData {
   manufacturer?: string;
   advance: string;
   notesReceived: string;
-}
-
-export interface AuthResponse extends RowDataPacket {
-  id: number;
-  name: string;
-  password: string;
 }
 
 export const AuthRequestSchema = z.object({
