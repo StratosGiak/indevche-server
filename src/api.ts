@@ -43,7 +43,7 @@ async function generateSmsText(type: SmsType, store?: number) {
   switch (type) {
     case SmsType.Repaired:
       if (!store) return null;
-      const { onoma: area, odos: address } = await getStore(store);
+      const { area, address } = await getStore(store);
       if (!area) return null;
       return `Η ΣΥΣΚΕΥΗ ΣΑΣ ΕΙΝΑΙ ΕΤΟΙΜΗ ΓΙΑ ΠΑΡΑΛΑΒΗ ΑΠΟ ΤΟ ΚΑΤΑΣΤΗΜΑ ΜΑΣ ${address}, ${area}.\nΑΞΙΟΛΟΓΗΣΤΕ ΜΑΣ ΘΕΤΙΚΑ ΕΔΩ : https://g.page/r/CcwC4xOwTPfIEB0/review`;
     case SmsType.Unrepairable:
@@ -74,49 +74,20 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(express.static(formDir));
 
-function convertRecord(record: DatabaseRecord) {
-  return {
-    id: record.id,
-    date: record.datek,
-    name: record.onomatep,
-    address: record.odos,
-    area: record.perioxi,
-    city: record.poli,
-    postalCode: record.tk,
-    phoneMobile: record.kinito,
-    phoneHome: record.tilefono,
-    email: record.email,
-    product: record.eidos,
-    manufacturer: record.marka,
-    serial: record.serialnr,
-    hasWarranty: record.warranty,
-    warrantyDate: record.datekwarr,
-    fee: record.pliromi,
-    advance: record.prokatavoli,
-    status: record.katastasi_p,
-    mechanic: record.mastoras_p,
-    photo: record.photo,
-    notesReceived: record.paratiriseis_para,
-    notesRepaired: record.paratiriseis_epi,
-    store: record.katastima,
-  } as Record;
-}
-
 app.post("/login", async function handleLogin(req, res) {
   try {
-    const user = AuthRequestSchema.parse(req.body);
-    const result = await getUser(user.username);
+    const request = AuthRequestSchema.parse(req.body);
+    const result = await getUser(request.username);
     if (!result) {
       res.status(404).json({ error: "Username not found" });
       return;
     }
-    const { id, onoma, password } = result;
-    if (password !== user.password) {
+    if (result.password !== request.password) {
       res.status(401).json({ error: "Wrong password" });
       return;
     }
     req.session.regenerate(function regenerate() {
-      req.session.user = { id: id, name: onoma };
+      req.session.user = { id: result.id, name: result.name };
       res.json(req.session.user);
     });
   } catch (error) {
@@ -186,24 +157,24 @@ app.get(
 app.put("/records/:id", restrict, async function handleEditRecord(req, res) {
   try {
     const index = z.coerce.number().int().min(1).parse(req.params.id);
-    const result = await getRecord(index);
-    if (!result) {
+    const oldRecord = await getRecord(index);
+    if (!oldRecord) {
       res.status(404).json({ error: "Record ID not found" });
       return;
     }
-    const { photo: oldPhoto, mastoras_p: mechanic } = result;
+    const { photo: oldPhoto, mechanic } = oldRecord;
     if (req.session.user?.id != 0 && req.session.user?.id != mechanic) {
       res.status(403).json({ error: "Not authorized" });
       return;
     }
-    const newRecord = {
+    const editedRecord = {
       ...req.body,
       mechanic:
         req.session.user!.id == 0 ? req.body.mechanic : req.session.user!.id,
       id: index,
     } as Record;
-    await editRecord(newRecord);
-    for (const history of newRecord.newHistory) {
+    await editRecord(editedRecord);
+    for (const history of editedRecord.newHistory) {
       await addHistory({
         ...history,
         recordId: index,
@@ -211,13 +182,13 @@ app.put("/records/:id", restrict, async function handleEditRecord(req, res) {
           req.session.user!.id == 0 ? req.body.mechanic : req.session.user!.id,
       });
     }
-    const record = await getRecord(index);
-    if (!record) {
+    const newRecord = await getRecord(index);
+    if (!newRecord) {
       res.status(500).json({ error: "Update failed" });
       return;
     }
-    res.send(record);
-    if (oldPhoto && oldPhoto != record.photo) {
+    res.send(newRecord);
+    if (oldPhoto && oldPhoto != newRecord.photo) {
       rm(`./public/images/${oldPhoto}`).catch((error) =>
         console.log(`Previous image ${oldPhoto} not found`)
       );
@@ -238,7 +209,7 @@ app.delete(
         return;
       }
       const index = z.coerce.number().int().min(1).parse(req.params.id);
-      const { photo } = await getRecordPhoto(index);
+      const photo = await getRecordPhoto(index);
       const result = await deleteRecord(index);
       if (!result) {
         res.status(404).json({ error: "Record ID not found" });
@@ -260,12 +231,11 @@ app.delete(
 app.get("/records/:id/form", restrict, async function handleGetForm(req, res) {
   try {
     const index = z.coerce.number().int().min(1).parse(req.params.id);
-    const result = await getRecord(index);
-    if (!result) {
+    const record = await getRecord(index);
+    if (!record) {
       res.status(404).json({ error: "Record ID not found" });
       return;
     }
-    const record = convertRecord(result);
     if (req.session.user?.id != 0 && req.session.user?.id != record.mechanic) {
       res.status(403).send();
       return;
@@ -310,9 +280,7 @@ app.post(
         res.status(400).json({ error: "Invalid SMS type" });
         return;
       }
-      const { katastima: store, kinito: phone } = await getRecordDataForSms(
-        index
-      );
+      const { store, phoneMobile: phone } = await getRecordDataForSms(index);
       const text = await generateSmsText(type, store);
       if (!phone || !text) {
         res.status(400).json({ error: "Cannot send SMS" });
@@ -358,19 +326,16 @@ app.get("/sms_callback", function handleSmsCallback(req, res) {
 app.get("/records/:id", restrict, async function handleGetRecord(req, res) {
   try {
     const index = z.coerce.number().int().min(1).parse(req.params.id);
-    const result = await getRecord(index);
-    if (!result) {
+    const record = await getRecord(index);
+    if (!record) {
       res.status(404).json({ error: "Record ID not found" });
       return;
     }
-    if (
-      req.session.user?.id != 0 &&
-      req.session.user!.id != result.mastoras_p
-    ) {
+    if (req.session.user?.id != 0 && req.session.user!.id != record.mechanic) {
       res.status(403).json({ error: "Not authorized" });
       return;
     }
-    res.send(result);
+    res.send(record);
   } catch (error) {
     res.status(400).json({ error: "Invalid record ID requested" });
     return;
@@ -380,19 +345,16 @@ app.get("/records/:id", restrict, async function handleGetRecord(req, res) {
 app.get("/history/:id", restrict, async function handleGetHistory(req, res) {
   try {
     const index = z.coerce.number().int().min(1).parse(req.params.id);
-    const result = await getHistory(index);
-    if (!result) {
+    const history = await getHistory(index);
+    if (!history) {
       res.status(404).json({ error: "History ID not found" });
       return;
     }
-    if (
-      req.session.user?.id != 0 &&
-      req.session.user?.id != result.mastoras_p
-    ) {
+    if (req.session.user?.id != 0 && req.session.user?.id != history.mechanic) {
       res.status(403).json({ error: "Not authorized" });
       return;
     }
-    res.send(result);
+    res.send(history);
   } catch (error) {
     res.status(400).json({ error: "Invalid history ID requested" });
     return;
@@ -409,12 +371,12 @@ app.get(
         res.status(403).json({ error: "Not authorized" });
         return;
       }
-      const result = await getAllHistoryOf(index);
-      if (!result) {
+      const history = await getAllHistoryOf(index);
+      if (!history) {
         res.status(404).json({ error: "Record ID not found" });
         return;
       }
-      res.send(result);
+      res.send(history);
     } catch (error) {
       res.status(400).json({ error: "Invalid record ID requested" });
       return;
@@ -426,8 +388,8 @@ app.get(
   "/suggestions",
   restrict,
   async function handleGetSuggestions(req, res) {
-    const result = await getAllSuggestions();
-    res.json(result);
+    const suggestions = await getAllSuggestions();
+    res.json(suggestions);
   }
 );
 
