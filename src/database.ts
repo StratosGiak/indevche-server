@@ -44,6 +44,7 @@ function convertRecord(record: DatabaseRecord) {
 
 function convertUser(user: DatabaseUser) {
   return {
+    id: user.id,
     name: user.onoma,
     username: user.username,
     password: user.password,

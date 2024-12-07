@@ -37,6 +37,7 @@ export interface DatabaseHistory extends RowDataPacket {
 }
 
 export interface DatabaseUser extends RowDataPacket {
+  id: number;
   onoma: string;
   password: string;
   username: string;
