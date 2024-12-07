@@ -102,7 +102,7 @@ function convertRecord(record: DatabaseRecord) {
   } as Record;
 }
 
-app.post("/login", async (req, res) => {
+app.post("/login", async function handleLogin(req, res) {
   try {
     const user = AuthRequestSchema.parse(req.body);
     const result = await getUser(user.username);
@@ -136,7 +136,7 @@ function restrict(
   }
 }
 
-app.get("/records/all", restrict, async (req, res) => {
+app.get("/records/all", restrict, async function handleGetAllRecord(req, res) {
   if (req.session.user?.id != 0) {
     res.status(403).json({ error: "Not authorized" });
   }
@@ -144,7 +144,7 @@ app.get("/records/all", restrict, async (req, res) => {
   res.json(result);
 });
 
-app.post("/records/new", restrict, async (req, res) => {
+app.post("/records/new", restrict, async function handleNewRecord(req, res) {
   const newRecord = {
     ...req.body,
     mechanic:
@@ -164,22 +164,26 @@ app.post("/records/new", restrict, async (req, res) => {
   }
 });
 
-app.get("/records/by/:id", restrict, async (req, res) => {
-  try {
-    const index = z.coerce.number().int().min(0).parse(req.params.id);
-    if (req.session.user?.id != 0 && req.session.user?.id != index) {
-      res.status(403).json({ error: "Not authorized" });
-      return;
+app.get(
+  "/records/by/:id",
+  restrict,
+  async function handleGetRecordsBy(req, res) {
+    try {
+      const index = z.coerce.number().int().min(0).parse(req.params.id);
+      if (req.session.user?.id != 0 && req.session.user?.id != index) {
+        res.status(403).json({ error: "Not authorized" });
+        return;
+      }
+      const result = await getAllRecordsByMechanic(index);
+      res.json(result);
+    } catch (error) {
+      console.log(error);
+      res.status(400).json({ error: "Invalid mechanic ID requested" });
     }
-    const result = await getAllRecordsByMechanic(index);
-    res.json(result);
-  } catch (error) {
-    console.log(error);
-    res.status(400).json({ error: "Invalid mechanic ID requested" });
   }
-});
+);
 
-app.put("/records/:id", restrict, async (req, res) => {
+app.put("/records/:id", restrict, async function handleEditRecord(req, res) {
   try {
     const index = z.coerce.number().int().min(1).parse(req.params.id);
     const result = await getRecord(index);
@@ -224,32 +228,36 @@ app.put("/records/:id", restrict, async (req, res) => {
   }
 });
 
-app.delete("/records/:id", restrict, async (req, res) => {
-  try {
-    if (req.session.user?.id != 0) {
-      res.status(403).send();
-      return;
+app.delete(
+  "/records/:id",
+  restrict,
+  async function handleDeleteRecord(req, res) {
+    try {
+      if (req.session.user?.id != 0) {
+        res.status(403).send();
+        return;
+      }
+      const index = z.coerce.number().int().min(1).parse(req.params.id);
+      const { photo } = await getRecordPhoto(index);
+      const result = await deleteRecord(index);
+      if (!result) {
+        res.status(404).json({ error: "Record ID not found" });
+        return;
+      }
+      res.send();
+      if (photo) {
+        rm(`./public/images/${photo}`).catch((error) =>
+          console.log(`Previous image ${photo} not found`)
+        );
+      }
+    } catch (error) {
+      console.log(error);
+      res.status(500).json({ error: "Delete failed" });
     }
-    const index = z.coerce.number().int().min(1).parse(req.params.id);
-    const { photo } = await getRecordPhoto(index);
-    const result = await deleteRecord(index);
-    if (!result) {
-      res.status(404).json({ error: "Record ID not found" });
-      return;
-    }
-    res.send();
-    if (photo) {
-      rm(`./public/images/${photo}`).catch((error) =>
-        console.log(`Previous image ${photo} not found`)
-      );
-    }
-  } catch (error) {
-    console.log(error);
-    res.status(500).json({ error: "Delete failed" });
   }
-});
+);
 
-app.get("/records/:id/form", restrict, async (req, res) => {
+app.get("/records/:id/form", restrict, async function handleGetForm(req, res) {
   try {
     const index = z.coerce.number().int().min(1).parse(req.params.id);
     const result = await getRecord(index);
@@ -280,61 +288,65 @@ app.get("/records/:id/form", restrict, async (req, res) => {
   }
 });
 
-app.post("/records/:id/sms/:type", restrict, async (req, res) => {
-  try {
-    const index = z.coerce.number().int().min(1).parse(req.params.id);
-    const type = ((type: string) => {
-      switch (true) {
-        case type === "repaired":
-          return SmsType.Repaired;
-        case type === "unrepairable":
-          return SmsType.Unrepairable;
-        case type === "thanks":
-          return SmsType.Thanks;
-        default:
-          return null;
+app.post(
+  "/records/:id/sms/:type",
+  restrict,
+  async function handleSendSms(req, res) {
+    try {
+      const index = z.coerce.number().int().min(1).parse(req.params.id);
+      const type = ((type: string) => {
+        switch (true) {
+          case type === "repaired":
+            return SmsType.Repaired;
+          case type === "unrepairable":
+            return SmsType.Unrepairable;
+          case type === "thanks":
+            return SmsType.Thanks;
+          default:
+            return null;
+        }
+      })(req.params.type);
+      if (type === null) {
+        res.status(400).json({ error: "Invalid SMS type" });
+        return;
       }
-    })(req.params.type);
-    if (type === null) {
-      res.status(400).json({ error: "Invalid SMS type" });
+      const { katastima: store, kinito: phone } = await getRecordDataForSms(
+        index
+      );
+      const text = await generateSmsText(type, store);
+      if (!phone || !text) {
+        res.status(400).json({ error: "Cannot send SMS" });
+        return;
+      }
+      const msgId = randomUUID();
+      const response = await fetch(
+        "https://easysms.gr/api/sms/send?" +
+          new URLSearchParams({
+            key: process.env.SMS_API_KEY!,
+            text: text,
+            from: "RodiService",
+            to: phone,
+            callback:
+              `http://188.245.190.233/api/sms_callback?` +
+              new URLSearchParams({ id: msgId }),
+          }).toString(),
+        { method: "POST" }
+      );
+      if (!response) {
+        res.status(500).send();
+        return;
+      }
+      pending[msgId] = res;
+    } catch (error) {
+      console.log(error);
+      res.status(400).json({ error: "Error while sending SMS" });
       return;
     }
-    const { katastima: store, kinito: phone } = await getRecordDataForSms(
-      index
-    );
-    const text = await generateSmsText(type, store);
-    if (!phone || !text) {
-      res.status(400).json({ error: "Cannot send SMS" });
-      return;
-    }
-    const msgId = randomUUID();
-    const response = await fetch(
-      "https://easysms.gr/api/sms/send?" +
-        new URLSearchParams({
-          key: process.env.SMS_API_KEY!,
-          text: text,
-          from: "RodiService",
-          to: phone,
-          callback:
-            `http://188.245.190.233/api/sms_callback?` +
-            new URLSearchParams({ id: msgId }),
-        }).toString(),
-      { method: "POST" }
-    );
-    if (!response) {
-      res.status(500).send();
-      return;
-    }
-    pending[msgId] = res;
-  } catch (error) {
-    console.log(error);
-    res.status(400).json({ error: "Error while sending SMS" });
-    return;
   }
-});
+);
 const pending: { [id: string]: express.Response } = {};
 
-app.get("/sms_callback", (req, res) => {
+app.get("/sms_callback", function handleSmsCallback(req, res) {
   res.send();
   const msgId = req.query.id as string;
   const status = req.query.status as string;
@@ -343,7 +355,7 @@ app.get("/sms_callback", (req, res) => {
   delete pending[msgId];
 });
 
-app.get("/records/:id", restrict, async (req, res) => {
+app.get("/records/:id", restrict, async function handleGetRecord(req, res) {
   try {
     const index = z.coerce.number().int().min(1).parse(req.params.id);
     const result = await getRecord(index);
@@ -365,7 +377,7 @@ app.get("/records/:id", restrict, async (req, res) => {
   }
 });
 
-app.get("/history/:id", restrict, async (req, res) => {
+app.get("/history/:id", restrict, async function handleGetHistory(req, res) {
   try {
     const index = z.coerce.number().int().min(1).parse(req.params.id);
     const result = await getHistory(index);
@@ -387,35 +399,43 @@ app.get("/history/:id", restrict, async (req, res) => {
   }
 });
 
-app.get("/history/of/:id", restrict, async (req, res) => {
-  try {
-    const index = z.coerce.number().int().min(0).parse(req.params.id);
-    if (req.session.user?.id != 0 && req.session.user?.id != index) {
-      res.status(403).json({ error: "Not authorized" });
+app.get(
+  "/history/of/:id",
+  restrict,
+  async function handleGetHistoryOf(req, res) {
+    try {
+      const index = z.coerce.number().int().min(0).parse(req.params.id);
+      if (req.session.user?.id != 0 && req.session.user?.id != index) {
+        res.status(403).json({ error: "Not authorized" });
+        return;
+      }
+      const result = await getAllHistoryOf(index);
+      if (!result) {
+        res.status(404).json({ error: "Record ID not found" });
+        return;
+      }
+      res.send(result);
+    } catch (error) {
+      res.status(400).json({ error: "Invalid record ID requested" });
       return;
     }
-    const result = await getAllHistoryOf(index);
-    if (!result) {
-      res.status(404).json({ error: "Record ID not found" });
-      return;
-    }
-    res.send(result);
-  } catch (error) {
-    res.status(400).json({ error: "Invalid record ID requested" });
-    return;
   }
-});
+);
 
-app.get("/suggestions", restrict, async (req, res) => {
-  const result = await getAllSuggestions();
-  res.json(result);
-});
+app.get(
+  "/suggestions",
+  restrict,
+  async function handleGetSuggestions(req, res) {
+    const result = await getAllSuggestions();
+    res.json(result);
+  }
+);
 
 const uploadPhoto = multer({
   dest: "./public/images",
   limits: { fileSize: 2e6 },
 });
-app.post("/media", restrict, (req, res) => {
+app.post("/media", restrict, function handlePostPhoto(req, res) {
   uploadPhoto.single("file")(req, res, (err) => {
     if (err || !req.file) {
       console.log(err);
