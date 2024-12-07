@@ -25,6 +25,7 @@ export interface DatabaseRecord extends RowDataPacket {
   paratiriseis_para: string;
   paratiriseis_epi?: string;
   katastima: number;
+  istoriko: DatabaseHistory[];
 }
 
 export interface DatabaseHistory extends RowDataPacket {
@@ -96,7 +97,7 @@ export interface User {
 }
 
 export interface Store {
-  name: string;
+  area: string;
   address: string;
 }
 
