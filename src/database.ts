@@ -90,7 +90,7 @@ export async function getRecord(index: number) {
     [index]
   );
   if (!result[0]) return;
-  result[0].istorika = await getAllHistoryOf(result[0].id);
+  result[0].istoriko = await getAllHistoryOfUnconverted(result[0].id);
   return convertRecord(result[0]);
 }
 
@@ -198,7 +198,7 @@ export async function getAllRecords() {
     "SELECT * FROM episkeves"
   );
   for (const record of result) {
-    record.istorika = await getAllHistoryOf(record.id);
+    record.istoriko = await getAllHistoryOfUnconverted(record.id);
   }
   return result.map((r) => convertRecord(r));
 }
@@ -209,7 +209,7 @@ export async function getAllRecordsByMechanic(id: number) {
     [id]
   );
   for (const record of result) {
-    record.istorika = await getAllHistoryOf(record.id);
+    record.istoriko = await getAllHistoryOfUnconverted(record.id);
   }
   return result.map((r) => convertRecord(r));
 }
@@ -223,13 +223,18 @@ export async function getHistory(index: number) {
   return convertHistory(result[0]);
 }
 
-export async function getAllHistoryOf(index: number) {
+export async function getAllHistoryOfUnconverted(index: number) {
   const [result, _] = await pool.execute<DatabaseHistory[]>(
     `SELECT ir.* FROM istorika_read ir
     JOIN istorika i ON ir.id = i.id
     WHERE i.episkevi_id = ?`,
     [index]
   );
+  return result;
+}
+
+export async function getAllHistoryOf(index: number) {
+  const result = await getAllHistoryOfUnconverted(index);
   return result.map((h) => convertHistory(h));
 }
 
