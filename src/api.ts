@@ -17,9 +17,10 @@ import {
   editRecord,
   addHistory,
   deleteRecord,
-  getRecordPhoto,
+  getRecordPhotos,
   getStore,
   getRecordDataForSms,
+  setPhotos,
 } from "./database.js";
 import {
   Record,
@@ -123,6 +124,7 @@ app.post("/records/new", restrict, async function handleNewRecord(req, res) {
   } as NewRecord;
   try {
     const result = await createRecord(newRecord);
+    await setPhotos(result.insertId, newRecord.photos);
     const record = await getRecord(result.insertId);
     if (!record) {
       res.status(500).json({ error: "Insert failed" });
@@ -162,7 +164,7 @@ app.put("/records/:id", restrict, async function handleEditRecord(req, res) {
       res.status(404).json({ error: "Record ID not found" });
       return;
     }
-    const { photo: oldPhoto, mechanic } = oldRecord;
+    const { photos: oldPhotos, mechanic } = oldRecord;
     if (req.session.user?.id != 0 && req.session.user?.id != mechanic) {
       res.status(403).json({ error: "Not authorized" });
       return;
@@ -182,16 +184,19 @@ app.put("/records/:id", restrict, async function handleEditRecord(req, res) {
           req.session.user!.id == 0 ? req.body.mechanic : req.session.user!.id,
       });
     }
+    await setPhotos(index, editedRecord.photos);
     const newRecord = await getRecord(index);
     if (!newRecord) {
       res.status(500).json({ error: "Update failed" });
       return;
     }
     res.send(newRecord);
-    if (oldPhoto && oldPhoto != newRecord.photo) {
-      rm(`./public/images/${oldPhoto}`).catch((error) =>
-        console.log(`Previous image ${oldPhoto} not found`)
-      );
+    for (const oldPhoto of oldPhotos) {
+      if (!newRecord.photos.includes(oldPhoto)) {
+        rm(`./public/images/${oldPhoto}`).catch((error) =>
+          console.log(`Previous image ${oldPhoto} not found`)
+        );
+      }
     }
   } catch (error) {
     console.log(error);
@@ -209,14 +214,14 @@ app.delete(
         return;
       }
       const index = z.coerce.number().int().min(1).parse(req.params.id);
-      const photo = await getRecordPhoto(index);
+      const photos = await getRecordPhotos(index);
       const result = await deleteRecord(index);
       if (!result) {
         res.status(404).json({ error: "Record ID not found" });
         return;
       }
       res.send();
-      if (photo) {
+      for (const photo of photos) {
         rm(`./public/images/${photo}`).catch((error) =>
           console.log(`Previous image ${photo} not found`)
         );

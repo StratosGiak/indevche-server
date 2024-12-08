@@ -92,6 +92,7 @@ export async function getRecord(index: number) {
   );
   if (!result[0]) return;
   result[0].istoriko = await getAllHistoryOfUnconverted(result[0].id);
+  result[0].photos = await getRecordPhotos(index);
   return convertRecord(result[0]);
 }
 
@@ -101,8 +102,8 @@ export async function createRecord(record: NewRecord) {
     (datek, onomatep, odos, perioxi, poli, tk,
     kinito, tilefono, email, eidos, marka, serialnr,
     warranty, datekwarr, pliromi, prokatavoli, katastasi_p, mastoras_p,
-    photo, paratiriseis_para, paratiriseis_epi, katastima) VALUES
-    (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    paratiriseis_para, paratiriseis_epi, katastima) VALUES
+    (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       record.date,
       record.name,
@@ -122,7 +123,6 @@ export async function createRecord(record: NewRecord) {
       record.advance,
       record.status,
       record.mechanic,
-      record.photo,
       record.notesReceived,
       record.notesRepaired,
       record.store,
@@ -137,7 +137,7 @@ export async function editRecord(record: Record) {
     datek = ?, onomatep = ?, odos = ?, perioxi = ?, poli = ?, tk = ?,
     kinito = ?, tilefono = ?, email = ?, eidos = ?, marka = ?, serialnr = ?,
     warranty = ?, datekwarr = ?, pliromi = ?, prokatavoli = ?, katastasi_p = ?,
-    photo = ?, paratiriseis_para = ?, paratiriseis_epi = ?, katastima = ?, mastoras_p = ?
+    paratiriseis_para = ?, paratiriseis_epi = ?, katastima = ?, mastoras_p = ?
     WHERE id = ?`,
     [
       record.date,
@@ -157,7 +157,6 @@ export async function editRecord(record: Record) {
       record.fee,
       record.advance,
       record.status,
-      record.photo,
       record.notesReceived,
       record.notesRepaired,
       record.store,
@@ -176,12 +175,12 @@ export async function deleteRecord(index: number) {
   return result;
 }
 
-export async function getRecordPhoto(index: number) {
+export async function getRecordPhotos(index: number): Promise<string[]> {
   const [result, _] = await pool.execute<RowDataPacket[]>(
-    "SELECT photo FROM episkeves WHERE id = ?",
+    "SELECT id FROM photos WHERE episkevi_id = ? ORDER BY seira",
     [index]
   );
-  return result[0] as unknown as string | undefined;
+  return result.map((p) => p["id"]);
 }
 
 export async function addHistory(history: NewHistory) {
@@ -194,12 +193,38 @@ export async function addHistory(history: NewHistory) {
   return result;
 }
 
+export async function addPhoto(photo: Photo) {
+  const [result, _] = await pool.execute<ResultSetHeader>(
+    `INSERT INTO photos
+    (id, episkevi_id, seira) VALUES
+    (?, ?, ?)`,
+    [photo.id, photo.recordId, photo.order]
+  );
+  return result;
+}
+
+export async function removeAllPhotos(index: number) {
+  const [result, _] = await pool.execute<ResultSetHeader>(
+    `DELETE FROM photos WHERE episkevi_id = ?`,
+    [index]
+  );
+  return result;
+}
+
+export async function setPhotos(index: number, photos: string[]) {
+  await removeAllPhotos(index);
+  for (const [i, photo] of photos.entries()) {
+    addPhoto({ id: photo, recordId: index, order: i });
+  }
+}
+
 export async function getAllRecords() {
   const [result, _] = await pool.execute<DatabaseRecord[]>(
     "SELECT * FROM episkeves"
   );
   for (const record of result) {
     record.istoriko = await getAllHistoryOfUnconverted(record.id);
+    record.photos = await getRecordPhotos(record.id);
   }
   return result.map((r) => convertRecord(r));
 }
@@ -211,6 +236,7 @@ export async function getAllRecordsByMechanic(id: number) {
   );
   for (const record of result) {
     record.istoriko = await getAllHistoryOfUnconverted(record.id);
+    record.photos = await getRecordPhotos(record.id);
   }
   return result.map((r) => convertRecord(r));
 }
