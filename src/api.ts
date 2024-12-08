@@ -34,6 +34,8 @@ import { createPDFForm } from "./pdf.js";
 import { randomUUID } from "crypto";
 const formDir = `${import.meta.dirname}/../forms/filled`;
 
+const MAX_PHOTOS = 5;
+
 declare module "express-session" {
   export interface SessionData {
     user: { id: number; name: string };
@@ -403,13 +405,16 @@ const uploadPhoto = multer({
   limits: { fileSize: 2e6 },
 });
 app.post("/media", restrict, function handlePostPhoto(req, res) {
-  uploadPhoto.single("file")(req, res, (err) => {
-    if (err || !req.file) {
+  uploadPhoto.array("file", MAX_PHOTOS)(req, res, (err) => {
+    if (err || !req.files) {
       console.log(err);
       res.status(500).send();
       return;
     }
-    res.send(req.file.filename);
+    const filenames = (req.files as Express.Multer.File[]).map(
+      (f) => f.filename
+    );
+    res.json(filenames);
   });
 });
 
