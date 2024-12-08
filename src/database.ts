@@ -227,7 +227,7 @@ export async function getAllHistoryOfUnconverted(index: number) {
   const [result, _] = await pool.execute<DatabaseHistory[]>(
     `SELECT ir.* FROM istorika_read ir
     JOIN istorika i ON ir.id = i.id
-    WHERE i.episkevi_id = ?`,
+    WHERE i.episkevi_id = ? ORDER BY datek DESC`,
     [index]
   );
   return result;
@@ -257,7 +257,9 @@ export async function getAllMechanics() {
 }
 
 export async function getAllStatuses() {
-  const [result, _] = await pool.execute("SELECT * FROM katastaseis");
+  const [result, _] = await pool.execute(
+    "SELECT * FROM katastaseis ORDER BY id"
+  );
   return result;
 }
 
@@ -277,7 +279,9 @@ export async function getAllStores() {
 }
 
 export async function getAllDamages() {
-  const [result, _] = await pool.execute("SELECT * FROM symptomata");
+  const [result, _] = await pool.execute(
+    "SELECT * FROM symptomata ORDER BY id"
+  );
   return result;
 }
 
