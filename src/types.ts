@@ -21,7 +21,7 @@ export interface DatabaseRecord extends RowDataPacket {
   prokatavoli: string;
   katastasi_p: number;
   mastoras_p: number;
-  photo?: string;
+  photos: string[];
   paratiriseis_para: string;
   paratiriseis_epi?: string;
   katastima: number;
@@ -65,7 +65,7 @@ export interface NewRecord {
   warrantyDate?: string;
   status: number;
   mechanic: number;
-  photo?: string;
+  photos: string[];
   advance: string;
   fee?: string;
   notesReceived: string;
@@ -100,6 +100,12 @@ export interface User {
 export interface Store {
   area: string;
   address: string;
+}
+
+export interface Photo {
+  id: string;
+  recordId: number;
+  order: number;
 }
 
 export enum SmsType {
