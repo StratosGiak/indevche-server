@@ -325,5 +325,12 @@ export async function getRecordDataForSms(id: number) {
     "SELECT katastima, mastoras_p, onomatep, kinito FROM episkeves WHERE id = ?",
     [id]
   );
-  return convertRecord(result[0]);
+  const record = result[0];
+  if (!record) return null;
+  return {
+    store: record.katastima,
+    mechanic: record.mastoras_p,
+    name: record.onomatep,
+    phone: record.kinito,
+  };
 }

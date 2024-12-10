@@ -287,7 +287,12 @@ app.post(
         res.status(400).json({ error: "Invalid SMS type" });
         return;
       }
-      const { store, phoneMobile: phone } = await getRecordDataForSms(index);
+      const record = await getRecordDataForSms(index);
+      if (!record) {
+        res.status(404).json({ error: "Record not found" });
+        return;
+      }
+      const { store, phone } = record;
       const text = await generateSmsText(type, store);
       if (!phone || !text) {
         res.status(400).json({ error: "Cannot send SMS" });
