@@ -1,7 +1,7 @@
 :80 {
     root * /var/www/rodiservice
 	request_body {
-		max_size 3MB
+		max_size 10MB
 	}
 
     file_server
