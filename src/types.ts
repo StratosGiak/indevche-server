@@ -46,6 +46,8 @@ export interface DatabaseUser extends RowDataPacket {
 export interface DatabaseStore extends RowDataPacket {
   onoma: string;
   odos: string;
+  tilefono: string;
+  link: string;
 }
 
 export interface NewRecord {
@@ -100,6 +102,8 @@ export interface User {
 export interface Store {
   area: string;
   address: string;
+  phone: string;
+  link: string;
 }
 
 export interface Photo {

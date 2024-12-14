@@ -44,15 +44,20 @@ declare module "express-session" {
 
 async function generateSmsText(type: SmsType, store?: number) {
   switch (type) {
-    case SmsType.Repaired:
+    case SmsType.Repaired: {
       if (!store) return null;
       const { area, address } = await getStore(store);
       if (!area) return null;
-      return `Η ΣΥΣΚΕΥΗ ΣΑΣ ΕΙΝΑΙ ΕΤΟΙΜΗ ΓΙΑ ΠΑΡΑΛΑΒΗ ΑΠΟ ΤΟ ΚΑΤΑΣΤΗΜΑ ΜΑΣ ${address}, ${area}.\nΑΞΙΟΛΟΓΗΣΤΕ ΜΑΣ ΘΕΤΙΚΑ ΕΔΩ : https://g.page/r/CcwC4xOwTPfIEB0/review`;
-    case SmsType.Unrepairable:
+      return `Η ΣΥΣΚΕΥΗ ΣΑΣ ΕΙΝΑΙ ΕΤΟΙΜΗ ΓΙΑ ΠΑΡΑΛΑΒΗ ΑΠΟ ΤΟ ΚΑΤΑΣΤΗΜΑ ΜΑΣ ${address}, ${area}.`;
+    }
+    case SmsType.Unrepairable: {
       return `ΣΑΣ ΕΝΗΜΕΡΩΝΟΥΜΕ ΟΤΙ Η ΣΥΣΚΕΥΗ ΣΑΣ ΕΧΕΙ ΚΡΙΘΕΙ ΑΝΕΠΙΣΚΕΥΑΣΤΗ.\nΠΑΡΑΚΑΛΩ ΓΙΑ ΤΗΝ ΑΜΕΣΗ ΠΑΡΑΛΑΒΗ ΤΗΣ, ΔΙΟΤΙ ΘΑ ΠΡΟΩΘΗΘΕΙ ΣΤΗΝ ΑΝΑΚΥΚΛΩΣΗ ΣΤΟ ΤΕΛΟΣ ΤΗΣ ΕΒΔΟΜΑΔΑΣ`;
-    case SmsType.Thanks:
-      return "ΕΥΧΑΡΙΣΤΟΥΜΕ ΓΙΑ ΤΗΝ ΠΡΟΤΙΜΗΣΗ ΣΑΣ. ΕΙΜΑΣΤΕ ΠΑΝΤΑ ΣΤΗ ΔΙΑΘΕΣΗ ΣΑΣ";
+    }
+    case SmsType.Thanks: {
+      if (!store) return null;
+      const { phone, link } = await getStore(store);
+      return `ΣΑΣ ΕΥΧΑΡΙΣΤΟΥΜΕ ΓΙΑ ΤΗΝ ΕΜΠΙΣΤΟΣΥΝΗ ΠΟΥ ΔΕΙΞΑΤΕ ΣΤΗΝ ΕΤΑΙΡΕΙΑ ΜΑΣ ΚΑΙ ΕΙΜΑΣΤΕ ΠΑΝΤΑ ΣΤΗΝ ΔΙΑΘΕΣΗ ΣΑΣ.\nΤΗΛ. ΕΠΙΚΟΙΝΩΝΙΑΣ: ${phone}\nΑΞΙΟΛΟΓΗΣΤΕ ΜΑΣ ΘΕΤΙΚΑ ΕΔΩ: ${link}`;
+    }
   }
 }
 

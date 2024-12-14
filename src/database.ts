@@ -66,6 +66,8 @@ function convertStore(store: DatabaseStore) {
   return {
     area: store.onoma,
     address: store.odos,
+    phone: store.tilefono,
+    link: store.link,
   } as Store;
 }
 
@@ -314,7 +316,7 @@ export async function getAllDamages() {
 
 export async function getStore(id: number) {
   const [result, _] = await pool.execute<DatabaseStore[]>(
-    "SELECT onoma, odos FROM katastimata WHERE id = ?",
+    "SELECT onoma, odos, tilefono, link FROM katastimata WHERE id = ?",
     [id]
   );
   return convertStore(result[0]);
