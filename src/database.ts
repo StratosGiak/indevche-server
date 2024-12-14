@@ -231,7 +231,7 @@ export async function getAllRecords() {
 
 export async function getAllRecordsByMechanic(id: number) {
   const [result, _] = await pool.execute<DatabaseRecord[]>(
-    "SELECT * FROM episkeves WHERE mastoras_p = ?",
+    "SELECT * FROM episkeves WHERE mastoras_p = ? AND katastasi_p != 4",
     [id]
   );
   for (const record of result) {
