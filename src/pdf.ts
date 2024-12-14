@@ -40,10 +40,10 @@ async function createXMLForm(data: FormData): Promise<string | null> {
   }
 }
 
-async function fillForm(form: string) {
+async function fillForm(form: string, store: number) {
   try {
     const { stdout, stderr } = await cmd(
-      `java -jar pdftk-all.jar ${formDir}/service.pdf fill_form ${formDir}/filled/${form} output ${formDir}/filled/${form}.pdf need_appearances`
+      `java -jar pdftk-all.jar ${formDir}/service${store}.pdf fill_form ${formDir}/filled/${form} output ${formDir}/filled/${form}.pdf need_appearances`
     );
     return `${form}.pdf`;
   } catch (error) {
@@ -54,10 +54,10 @@ async function fillForm(form: string) {
   }
 }
 
-export async function createPDFForm(data: FormData) {
+export async function createPDFForm(data: FormData, store: number) {
   const form = await createXMLForm(data);
   if (!form) return null;
-  const filename = await fillForm(form);
+  const filename = await fillForm(form, store);
   if (!filename) return null;
   setTimeout(5 * 60 * 1000).then(() => rm(`${formDir}/filled/${filename}`));
   return filename;

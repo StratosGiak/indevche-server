@@ -10,7 +10,7 @@
       <field name="city">
 		   <value></value>
       </field>
-      <field name="phone">
+      <field name="phoneMobile">
 		   <value></value>
       </field>
       <field name="id">

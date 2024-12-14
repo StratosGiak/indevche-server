@@ -128,7 +128,7 @@ export interface FormData {
   name: string;
   address?: string;
   city?: string;
-  phone: string;
+  phoneMobile: string;
   product: string;
   manufacturer?: string;
   advance: string;

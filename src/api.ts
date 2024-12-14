@@ -247,13 +247,15 @@ app.get("/records/:id/form", restrict, async function handleGetForm(req, res) {
       res.status(403).send();
       return;
     }
-    const filename = await createPDFForm({
-      ...record,
-      id: req.params.id,
-      phone: record.phoneMobile,
-      date: new Date(record.date).toLocaleDateString("en-GB"),
-      advance: "€ " + record.advance,
-    });
+    const filename = await createPDFForm(
+      {
+        ...record,
+        id: req.params.id,
+        date: new Date(record.date).toLocaleDateString("en-GB"),
+        advance: "€ " + record.advance,
+      },
+      record.store
+    );
     if (!filename) {
       res.status(500).send();
       return;
