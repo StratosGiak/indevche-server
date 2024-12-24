@@ -10,6 +10,8 @@ services:
       - caddy_data:/data
       - caddy_config:/config
       - ./forms:/var/www/rodiservice/forms:ro
+    env_file:
+      - .env
     depends_on:
       - node_app
   redis_cache:
