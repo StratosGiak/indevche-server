@@ -33,6 +33,7 @@ services:
     volumes:
       - shared_volume:/usr/src/app/public/images
       - ./forms:/usr/src/app/forms
+      - ./serviceAccountKey.json:/usr/src/app/serviceAccountKey.json
     environment:
       NODE_ENV: production
     env_file:
