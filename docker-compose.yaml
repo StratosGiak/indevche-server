@@ -17,8 +17,6 @@ services:
   redis_session:
     image: redis:latest
     restart: always
-    ports:
-      - 127.0.0.1:6379:6379
     command: redis-server --save 60 1
     volumes:
       - redis_session_data:/data
@@ -39,8 +37,6 @@ services:
       NODE_ENV: production
     env_file:
       - .env
-    ports:
-      - 127.0.0.1:${PORT}:${PORT}
     depends_on:
       - redis_session
       - redis_token
