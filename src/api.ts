@@ -39,7 +39,7 @@ const MAX_PHOTOS = 5;
 
 declare module "express-session" {
   export interface SessionData {
-    user: { id: number; name: string };
+    user: { id: number; name: string; token: string };
   }
 }
 
@@ -96,7 +96,11 @@ app.post("/login", async function handleLogin(req, res) {
       return;
     }
     req.session.regenerate(function regenerate() {
-      req.session.user = { id: result.id, name: result.name };
+      req.session.user = {
+        id: result.id,
+        name: result.name,
+        token: request.firebaseToken,
+      };
       res.json(req.session.user);
     });
     await addDevice(request.firebaseToken);
@@ -140,7 +144,7 @@ app.post("/records/new", restrict, async function handleNewRecord(req, res) {
       return;
     }
     res.json(record);
-    await sendToAll(Notifications.NewRecord);
+    await sendToAll(Notifications.NewRecord, req.session.user!.token);
   } catch (error) {
     console.log(error);
     res.status(500).json({ error: "Insert failed" });

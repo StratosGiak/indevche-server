@@ -18,8 +18,11 @@ export async function addDevice(token: string) {
   await redisTokenClient.sAdd("tokens", token);
 }
 
-export async function sendToAll(type: Notifications) {
-  const tokens = await redisTokenClient.sMembers("tokens");
+export async function sendToAll(type: Notifications, from: string) {
+  const tokens = (await redisTokenClient.sMembers("tokens")).filter(
+    (token) => token != from
+  );
+
   const message: admin.messaging.MulticastMessage = {
     tokens: tokens,
     notification: { title: "Rodis Service", body: "Δημιουργήθηκε νέα εντολή" },
