@@ -14,14 +14,20 @@ services:
       - .env
     depends_on:
       - node_app
-  redis_cache:
+  redis_session:
     image: redis:latest
     restart: always
     ports:
       - 127.0.0.1:6379:6379
     command: redis-server --save 60 1
     volumes:
-      - redis_data:/data
+      - redis_session_data:/data
+  redis_token:
+    image: redis:latest
+    restart: always
+    command: redis-server --save 3600 1
+    volumes:
+      - redis_token_data:/data
   node_app:
     image: stratosgiak/indevche-node
     init: true
@@ -31,13 +37,13 @@ services:
       - ./forms:/usr/src/app/forms
     environment:
       NODE_ENV: production
-      REDIS_HOST: redis_cache
     env_file:
       - .env
     ports:
       - 127.0.0.1:${PORT}:${PORT}
     depends_on:
-      - redis_cache
+      - redis_session
+      - redis_token
     extra_hosts:
       - "host.docker.internal:host-gateway"
 
@@ -46,6 +52,7 @@ volumes:
     external: true
   flutter_volume:
     external: true
-  redis_data:
+  redis_session_data:
+  redis_token_data:
   caddy_data:
   caddy_config:
