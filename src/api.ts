@@ -29,6 +29,7 @@ import {
   DatabaseRecord,
   SmsType,
 } from "./types.js";
+import { addDevice, Notifications, sendToAll } from "./tokens.js";
 import { rm } from "fs/promises";
 import { createPDFForm } from "./pdf.js";
 import { randomUUID } from "crypto";
@@ -61,10 +62,10 @@ async function generateSmsText(type: SmsType, store?: number) {
   }
 }
 
-const redisClient = createClient({ url: "redis://redis_cache" });
-redisClient.connect();
+const redisSessionClient = createClient({ url: "redis://redis_session" });
+await redisSessionClient.connect();
 const redisStore = new RedisStore({
-  client: redisClient,
+  client: redisSessionClient,
   prefix: "rodis",
 });
 const app = express();
@@ -98,6 +99,7 @@ app.post("/login", async function handleLogin(req, res) {
       req.session.user = { id: result.id, name: result.name };
       res.json(req.session.user);
     });
+    await addDevice(request.firebaseToken);
   } catch (error) {
     console.log(error);
     res.status(400).json({ error: "Bad request" });
@@ -138,6 +140,7 @@ app.post("/records/new", restrict, async function handleNewRecord(req, res) {
       return;
     }
     res.json(record);
+    await sendToAll(Notifications.NewRecord);
   } catch (error) {
     console.log(error);
     res.status(500).json({ error: "Insert failed" });
