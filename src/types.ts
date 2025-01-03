@@ -142,7 +142,7 @@ export interface FormData {
 export const AuthRequestSchema = z.object({
   username: z.string(),
   password: z.string(),
-  firebaseToken: z.string(),
+  firebaseToken: z.string().optional(),
 });
 
 export type AuthRequest = z.infer<typeof AuthRequestSchema>;
